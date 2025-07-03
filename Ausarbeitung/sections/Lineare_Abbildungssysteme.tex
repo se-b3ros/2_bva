@@ -1,6 +1,36 @@
 \section{Lineare Abbildungssysteme}
 
 \subsection{Wie funktioniert die Lochkamera (Kamera-Obscura) im Detail?}
+Das grundlegende Funktionsprinzip der Kamera-Obscura basiert darauf, dass durch ein kleines Loch auf der einen Seite eines 
+lichtdichten Raums die vom Motiv reflektierten Strahlen auf die gegenüberliegende Seite fallen und dort das Objekt seitenverkehrt 
+und kopfstehend abbilden.
+
+\includeImgNoUrl{H}{width=0.5\linewidth}{./img/Lineare_Abbildungssysteme/1.png}{Konzept der Kamera Obscura}{fig:linsys-1}{\centering}
+
+\textbox{
+  Die Größe der Lochblende ist ein Kompromiss zwischen Schärfe und Helligkeit.\\ \textbf{Je größer das Loch $\Rightarrow$ desto heller 
+  und ebenso weniger scharf das Bild}
+}
+
+\noindent
+
+\subsubsubsection{Kamera-Koordinaten vs. Bild-Koordinaten}
+
+\begin{table}[H]
+  \begin{tabularx}{\linewidth}{| X | X |}
+    \hline
+    \rowcolor{Gray} \textbf{Kamera-Koordinaten} & \textbf{Bild-Koordinaten} \\\hline
+
+    3D (x, y, z) & 2D ($x_b$, $y_b$)\\\hline
+    Beschreibt die Position in der Realität relativ zur Kameraposition & Ist die Projektion der 3D Wirklichkeit auf die 2D-Bildebene\\\hline
+  \end{tabularx}
+\end{table}
+
+\includeImgNoUrl{H}{width=\linewidth}{./img/Lineare_Abbildungssysteme/2.png}{Geometrie Camera-Obscura}{fig:linsys-2}{\centering}
+
+\noindent
+Wenn $z < b$ (z ist der Abstand von der Lochblende zum Objekt und b ist der Abstand von der Lochblende zur Bildfläche(Rückwand)), dann
+wird das Objekt auf der Bildfläche \textbf{vergrößert} dargestellt. Ist jedoch $z > b$ wird das Objekt \textbf{verkleinert} dargestellt.
 
 \subsection{Welche Auswirkungen hat die Lochblende bei der Kamera-Obscura?}
 
