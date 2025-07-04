@@ -421,20 +421,107 @@ Warum ein Feature-Vektor:
 ---
 ## 6. Computer Vision and Machine Learning [9]
 
-6.1 Wofür werden Bilddatenbanken als „ground-truth“ benötigt. Welche Daten sind dabei hilfreich (vgl. Bilddaten, Depth-from-Focus, 3D Rekonstruktion).
+**6.1 Wofür werden Bilddatenbanken als „ground-truth“ benötigt.**
 
-6.2 Was sind die Fallstricke bei der Verwendung von Bilddatenbanken?
+Ground-truth bedeutet die exakte Referenz, also eine genaue, verlässliche "Wahrheit" über Bildinhalte (z.B. korrekte Segmentierung, Klassifikation).
 
-6.3 Wie kann man Datenbanken „anreichern“, wenn nicht genügend Testdaten verfügbar sind? Was ist diesbezüglich der Vorteil/Nachteil von simulierten [Bild]daten?
+Bilddatenbanken mit Ground-truth werden gebraucht, um:
+  * Algorithmen in der Computer Vision zu trainieren und zu testen.
+  * Ergebnisse verschiedener Verfahren objektiv zu vergleichen.
+  * Zu überprüfen, wie gut eine Methode wirklich arbeitet.
 
-6.4 Führen Sie detailliert über Datenaugmentierung sowie Tools zur semi-automatischen Annotation von Bildern aus.
+**Welche Daten sind dabei hilfreich (vgl. Bilddaten, Depth-from-Focus, 3D Rekonstruktion).**
 
-6.5 Was ist ein U-NET? Wie würden Sie dabei den Datenfluss mit RNNs bzw. LSTM vergleichen? Welche Vorverarbeitungsschritte sind notwendig, bevor das Eingangssignal (z.B. Bild) dem Input-Layer übergeben werden kann? Welche Auswirkung hat die Wahl der Vorverarbeitung auf das trainierte CNN?
+* Bilddaten mit genauen Labels (z.B. was ist Objekt, Hintergrund, welche Klasse).
+* Depth-from-Focus Daten: zusätzliche Tiefeninformationen, um Objekte besser zu unterscheiden.
+* 3D Rekonstruktion: 3D-Modelle oder Volumen helfen, räumliche Strukturen exakt zu erfassen.
 
-6.6 Nennen Sie Anwendungsgebiete für Deep Learning. Differenzieren Sie dabei zwischen Klassifikation und Segmentierung – was sind die Auswirkungen auf die Netzwerkarchitektur (input/output Layer)? Was ist die Schwierigkeit bei der Verarbeitung von Eingangsdaten dynamischer Größe?
+---
 
-6.7 Erläutern Sie das Prinzip von GANs und deren Einsatzgebiete.
+**6.2 Was sind die Fallstricke bei der Verwendung von Bilddatenbanken?**
 
-6.8 Diskutieren Sie die Bedeutung und Anwendungsgebiete von Yolo.
+* **Begrenzte Realitätsnähe:** Bilddatenbanken zeigen nur einen kleinen Ausschnitt der realen Welt, viele Situationen fehlen.
+* **Qualität der Daten:** Ground-truth ist nicht immer korrekt oder vollständig, es gibt Fehler, Lücken und Verzerrungen.
+* **Bias:** Bilder können z.B. bevorzugte Blickwinkel (Autos nur von der Seite) oder typische Posen enthalten, was das Training einseitig macht.
+* **Redundanz:** Viele Daten enthalten sehr ähnliche oder gleiche Motive, was die Vielfalt einschränkt und Modelle überoptimiert auf diese speziellen Beispiele.
+* **Visuelle Herausforderungen:** Probleme wie Schatten, Blendungen, Reflexionen, schlechte Beleuchtung oder Verdeckungen werden oft nicht oder nur unzureichend abgebildet.
+* **Unterschiedliche Test- und Realitätsszenarien:** Algorithmen, die in Benchmarks gut abschneiden, können im echten Einsatz stark schlechter sein.
 
-6.9 Diskutieren Sie die Bedeutung der Vorverarbeitung, wenn Bilddaten in den Eingangstensor überführt werden. Was könnte dabei schiefgehen?
+---
+
+**6.3 Wie kann man Datenbanken „anreichern“, wenn nicht genügend Testdaten verfügbar sind?**
+
+1. Datenaugmentation durch Transformationen:
+
+* Bilder spiegeln (horizontal/vertikal)
+* Helligkeit, Kontrast oder Farben verändern (z.B. Gamma-Korrektur)
+* Affine Transformationen: drehen, verschieben, skalieren, verzerren
+* Künstliches Hinzufügen von Rauschen oder Objekten
+* Sub-Bilder (Ausschnitte) von wichtigen Bildteilen erstellen
+* Ersetzen von Bildteilen, z.B. Gesichter in Videos austauschen
+* Einfügen von computergenerierten Bildern (CGI) in bestehende Szenen
+
+2. Automatisches Hinzufügen ähnlicher Bilder aus dem Internet:
+
+* Bilder von Suchmaschinen (Google, Flickr) abrufen
+* Automatische Annotation (Labeln) mit wenig manuellem Aufwand durch Ähnlichkeitssuche
+* Schrittweise Erweiterung des Datensatzes basierend auf Ähnlichkeit (Feedback-Loop)
+
+3. Transfer Learning mit vortrainierten Deep CNNs:
+
+* Vortrainierte Netzwerke (z.B. auf ImageNet) als Ausgangspunkt nehmen
+* Auf kleinere, domänenspezifische Datensätze (z.B. Blumenarten) weitertrainieren (Feinabstimmung)
+* Vorteil: Gute Grundkenntnisse werden erweitert, es braucht weniger neue Daten
+
+4. Nutzung von 3D-Modellen zur Generierung von Bildern:
+
+* 3D-Objekte digital rendern (realistische Bilder erzeugen)
+* Verschiedene Perspektiven und Posen simulieren (z.B. für Menschen, Fahrzeuge)
+* Dadurch kann der Datensatz gezielt und vielfältig erweitert werden
+
+**Was ist diesbezüglich der Vorteil/Nachteil von simulierten [Bild]daten?**
+
+Vorteile von simulierten Bilddaten (z.B. aus 3D-Modellen)
+
+* Kontrollierte Vielfalt: Man kann gezielt verschiedene Ansichten, Posen, Beleuchtungen erzeugen.
+* Unbegrenzte Datenmenge: Es können beliebig viele Bilder generiert werden.
+* Exakte Annotation: Da alles simuliert ist, sind Labels und Tiefeninformationen perfekt verfügbar.
+* Geringerer Aufwand für manuelles Labeln.
+
+Nachteile von simulierten Bilddaten
+
+* Realitätslücke: Simulierte Bilder können von echten Bildern abweichen (Domänenunterschiede).
+* Weniger natürliche Variationen: Manche Bildfehler oder Störungen fehlen (z.B. Kamerarauschen, Reflexionen).
+* Aufwendige Erstellung: Hochrealistische 3D-Modelle und Rendering benötigen viel Aufwand und Rechenleistung.
+
+---
+
+**6.4 Führen Sie detailliert über Datenaugmentierung sowie Tools zur semi-automatischen Annotation von Bildern aus.**
+
+Datenaugmentierung ist eine Methode, um vorhandene Bilddaten künstlich zu erweitern, indem Variationen der Originalbilder erzeugt werden. Ziel ist es, die Datenmenge zu erhöhen und gleichzeitig die Robustheit von Modellen gegen unterschiedliche Bildvariationen zu verbessern.
+* Methoden: Spiegeln, Drehen, Skalieren, Farb- und Kontraständerungen, Rauschen hinzufügen, Zufallsausschnitte.
+
+Semi-automatisch bedeutet:
+Der Computer schlägt automatische Annotationen vor, die der Mensch dann korrigiert oder bestätigt.
+* Tools: Polygon- oder Bounding-Box-Annotation (LabelMe, LabelImg), Superpixel-Segmentierung, Deep-Learning-Modelle für Vorschläge (Mask R-CNN, CVAT).
+
+---
+
+**6.5 Was ist ein U-NET? Wie würden Sie dabei den Datenfluss mit RNNs bzw. LSTM vergleichen? Welche Vorverarbeitungsschritte sind notwendig, bevor das Eingangssignal (z.B. Bild) dem Input-Layer übergeben werden kann? Welche Auswirkung hat die Wahl der Vorverarbeitung auf das trainierte CNN?**
+
+
+
+**6.6 Nennen Sie Anwendungsgebiete für Deep Learning. Differenzieren Sie dabei zwischen Klassifikation und Segmentierung – was sind die Auswirkungen auf die Netzwerkarchitektur (input/output Layer)? Was ist die Schwierigkeit bei der Verarbeitung von Eingangsdaten dynamischer Größe?**
+
+
+
+**6.7 Erläutern Sie das Prinzip von GANs und deren Einsatzgebiete.**
+
+
+
+**6.8 Diskutieren Sie die Bedeutung und Anwendungsgebiete von Yolo.**
+
+
+
+**6.9 Diskutieren Sie die Bedeutung der Vorverarbeitung, wenn Bilddaten in den Eingangstensor überführt werden. Was könnte dabei schiefgehen?**
+
