@@ -1,0 +1,109 @@
+\section{Lineare Abbildungssysteme}
+
+\subsection{Wie funktioniert die Lochkamera (Kamera-Obscura) im Detail?}
+Das grundlegende Funktionsprinzip der Kamera-Obscura basiert darauf, dass durch ein kleines Loch auf der einen Seite eines 
+lichtdichten Raums die vom Motiv reflektierten Strahlen auf die gegenüberliegende Seite fallen und dort das Objekt seitenverkehrt 
+und kopfstehend abbilden.
+
+\includeImgNoUrl{H}{width=0.5\linewidth}{./img/Lineare_Abbildungssysteme/1.png}{Konzept der Kamera Obscura}{fig:linsys-1}{\centering}
+
+\textbox{
+  Die Größe der Lochblende ist ein Kompromiss zwischen Schärfe und Helligkeit.\\ \textbf{Je größer das Loch $\Rightarrow$ desto heller 
+  und ebenso weniger scharf das Bild}
+}
+
+\noindent
+
+\subsubsubsection{Kamera-Koordinaten vs. Bild-Koordinaten}
+
+\begin{table}[H]
+  \begin{tabularx}{\linewidth}{| X | X |}
+    \hline
+    \rowcolor{Gray} \textbf{Kamera-Koordinaten} & \textbf{Bild-Koordinaten} \\\hline
+
+    3D (x, y, z) & 2D ($x_b$, $y_b$)\\\hline
+    Beschreibt die Position in der Realität relativ zur Kameraposition & Ist die Projektion der 3D Wirklichkeit auf die 2D-Bildebene\\\hline
+  \end{tabularx}
+\end{table}
+
+\includeImgNoUrl{H}{width=\linewidth}{./img/Lineare_Abbildungssysteme/2.png}{Geometrie Camera-Obscura}{fig:linsys-2}{\centering}
+
+\noindent
+Wenn $z < b$ (z ist der Abstand von der Lochblende zum Objekt und b ist der Abstand von der Lochblende zur Bildfläche(Rückwand)), dann
+wird das Objekt auf der Bildfläche \textbf{vergrößert} dargestellt. Ist jedoch $z > b$ wird das Objekt \textbf{verkleinert} dargestellt.
+
+\subsection{Welche Auswirkungen hat die Lochblende bei der Kamera-Obscura?}
+Die Lochblende bei der Kamera-Obscura ist die einzige Öffnung im geschlossenen Raum, durch die Licht in den Raum kommt. Dabei ist die 
+Größe der Öffnung maßgeblich für die Helligkeit und auch für die Schärfe des 2D Bildes auf der Rückseite des Raums.
+
+\textbox{
+  \textbf{Je Größer die Öffnung, desto heller, aber gleichzeitig weniger scharf das 2D Bild.}
+}
+
+\noindent
+Zudem ist das Verhältnis der Abstände zwischen Objekt und Lochlende zu Bildfläche und Lochblende entscheidend für den "Zoom".\\ 
+
+\textbox{
+  Ist der Abstand zwischen Objekt und Lochblende \textbf{kleiner} als der Abstand zwischen Lochblende und Bildfläche, so wird das 
+  Objekt auf der Bildfläche \textbf{vergrößert}, andernfalls \textbf{verkleinert}
+}
+
+\subsection{Was passiert, wenn man das Loch bei der Kamera-Obscura vergrößert / verkleinert?}
+Wird das Loch vergrößert, so wird das Bild auf der Bildfläche heller, aber auch unschärfer. Andernfalls wird das Bild dunkler 
+(es kommt weniger Licht in den Raum), aber das Bild erscheint schärfer.
+
+\subsection{Wovon hängt die schärfe des Bildes bei der Kamera-Obscura ab?}
+Von der Menge an "parallel" verlaufender Lichtstrahlen. Je mehr es sind, umso unschärfer wird das Bild. Darum soll das Loch in der
+Lochblende möglichst klein ausfallen.\\
+
+\textbox{
+  Theoretisch würde ein unendlichkleines Loch (wo nur ein Lichtstrahl je Einfallswinkel durchkommt) das perfekt scharfe Bild auf der 
+  Bildfläche erzeugen. (Auf Kosten der Helligkeit)
+}
+
+\subsection{Wovon hängt die Helligkeit des Bildes bei der Kamera-Obscura ab?}
+Von der Menge an "parallel" verlaufender Lichtstrahlen. Je mehr es sind, umso heller wird das Bild. Jedoch geht das auf Kosten der 
+Schärfe. Instument zur Manipulation ist also das Loch in der Lochblende, mithilfe welcher das einfallende Licht gesteuert werden
+kann.\\
+
+\subsection{In welchem Zusammenhang stehen Helligkeit und Schärfe bei der Kamera-Obscura im Bezug auf die Fokuslänge?}
+Bei der Camera Obscura besteht ein direkter Zusammenhang zwischen Lochgröße, Helligkeit und Schärfe. Je kleiner das Loch, 
+desto schärfer das Bild, aber desto geringer die Lichtstärke (verleichbar mit kurzer Belichtungszeit). Umgekehrt gilt: Je größer die 
+Blende, desto heller das Bild, weil mehr Licht in die Kamera trifft.\\
+
+\noindent
+Die Fokuslänge bei der Camera Obscura der physische Abstand zwischen der Lochblende und der Projektionsfläche, wobei dieser
+Abstand die Bildgröße und die optimale Schärfe beeinflusst.
+
+\includeImgNoUrl{H}{width=\linewidth}{./img/Lineare_Abbildungssysteme/3.png}{Fokuslänge}{fig:linsys-3}{\centering}
+
+\subsection{Was sind intrinsische und extrinische Ebenen, Parameter?}
+Intrinsische Kameraparameter beschreiben die internen geometrischen Eigenschaften einer Kamera und ermöglichen die Abbildung zwischen 
+Kamerakoordinaten und Pixelkoordinaten im Bildsystem. Wo hingegen extrinsische Kamera Parameter die Position der Kamera
+im dreidimensionalen Raum beschreiben.
+
+\subsection{Welche intrinischen, extrinsischen Parameter gibt es?}
+
+\subsection{Welche Arten der Verzerrung gibt es bei der Kamera-Kalibrierung?}
+
+\subsection{Wie werden Fehler bei der Kamera-Kalibrierung minimiert?}
+
+\subsection{Was passiert auf dem Bild auf Folie 37 (Kamera Kalibrierung, x und w auf Linie bringen)?}
+
+\subsection{Wie funktioniert Kamera Kalibrierung? (Allgemein und Übung)}
+
+\subsection{Nennen sie die Matrizen für die intrinischen und extrinsischen Parameter?}
+
+\subsection{Was sind Vorteile der intrinischen im Vergleich zu den extrinischen Parametern? (Kommutativität)}
+
+\subsection{Wie können die Kamera Parameter angewendet/umgerechnet werden?}
+
+\subsection{Wie funktionieren 2D Koordinatensysteme?}
+
+\subsection{Was ist der Einheitsvektor in einem 2D-Koordinatensystem?}
+
+\subsection{Was ist mit "Projektion" gemeint? (2D-Koordinatensystem)}
+
+\subsection{Welche Matrix-Operationen können im 2D-Koordinatensystem angewendet werden? (Beispiele)}
+
+

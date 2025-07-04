@@ -1,0 +1,85 @@
+\documentclass[11pt]{article}
+
+% ----------------------------------------------------------------------------------------
+% -- Imports
+% ----------------------------------------------------------------------------------------
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{lastpage}
+\usepackage[a4paper, left=2cm, right=2cm, top=2.5cm, bottom=3cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{colortbl}
+\usepackage{fancyvrb}
+\usepackage{pdfpages}
+\usepackage{minted}
+\usepackage{xcolor} % to access the named colour LightGray
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath}
+\definecolor{LightGray}{gray}{0.96}
+
+\definecolor{Gray}{gray}{0.9}
+\usemintedstyle{igor}
+\newmintedfile{c}{bgcolor=LightGray,tabsize=2,framesep=0.2cm,frame=leftline,linenos,fontsize=\small, breaklines}
+\newmintedfile{cpp}{bgcolor=LightGray,tabsize=2,framesep=0.2cm,frame=leftline,linenos,fontsize=\small, breaklines}
+\newmintedfile{java}{bgcolor=LightGray,tabsize=2,framesep=0.2cm,frame=leftline,linenos,fontsize=\small, breaklines, }
+
+\renewcommand{\figurename}{Abbildung}
+
+\def\shrug{\texttt{\raisebox{0.75em}{\char`\_}\char`\\\char`\_\kern-0.5ex(\kern-0.25ex\raisebox{0.25ex}{\rotatebox{45}{\raisebox{-.75ex}"\kern-1.5ex\rotatebox{-90})}}\kern-0.5ex)\kern-0.5ex\char`\_/\raisebox{0.75em}{\char`\_}}}
+
+% ----------------------------------------------------------------------------------------
+% -- Header & Footer
+% ----------------------------------------------------------------------------------------
+\pagestyle{fancy}
+\setlength\headheight{39pt} 
+
+% Header
+\lhead{\leftmark}
+\chead{}
+\rhead{\includegraphics[height=35pt]{./img/logo.png}}
+\renewcommand{\headrulewidth}{0.1pt} %obere Trennlinie
+
+% Footer
+\lfoot{FH-Hagenberg $|$ Software Engineering Master $|$ Semester 2}
+\cfoot{}
+\rfoot{Seite \thepage / \pageref{LastPage}}
+\renewcommand{\footrulewidth}{0.1pt} %untere Trennlinie
+
+
+% ----------------------------------------------------------------------------------------
+% -- Begin of the document
+% ----------------------------------------------------------------------------------------
+\begin{document}
+\include{highlighting}
+\include{commands}
+
+% Titelpage (--> hier die Angabe)
+%\includepdf[pages={1-3}]{./img/UE05.pdf}
+\begin{titlepage}
+	\title{BVA2ILV: Fortgeschrittene Bildverarbeitung und -analyse} 
+	\author{BB-Bros-extended} 
+	\date{\today} 
+	\maketitle
+	\thispagestyle{empty}
+	\newpage
+\end{titlepage}
+
+% Table of Contents (--> für die Abgabe kein Table of Contentes)
+\tableofcontents
+\listoffigures
+\thispagestyle{empty}
+\newpage
+
+% Content
+\include{sections/Lineare_Abbildungssysteme}
+\include{sections/Segementierung_Klassifikation}
+\include{sections/Bildrestauration}
+\include{sections/Lokalisierung}
+\include{sections/3D_Rekonstruktion}
+\include{sections/Computer_Vision_und_ML}
+
+
+\end{document}
