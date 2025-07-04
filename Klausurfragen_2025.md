@@ -72,26 +72,335 @@
 ---
 ## 4. Localization [10]
 
-4.1 Erörtern Sie die Kernidee von VSLAM anhand einer eigenen Skizze und führen Sie in diesem Zusammenhang über die loop closure aus. In welchen Anwendungsdomänen spielt der VSLAM Algorithmus eine zentrale Rolle?
+**4.1 Erörtern Sie die Kernidee von VSLAM anhand einer eigenen Skizze und führen Sie in diesem Zusammenhang über die loop closure aus. In welchen Anwendungsdomänen spielt der VSLAM Algorithmus eine zentrale Rolle?**
 
-4.2 Hough-Transformation von Linien (konventionelle Geradengleichung – keine Polarkoordinaten): Linie im Ortsraum wird zu Punkt im Parameterraum. Geradengleichung + Skizze. Wie kann nun damit eine Linie als lokales Max. im Parameterraum detektiert werden (Skizze)
+Visual SLAM verwendet hauptsächlich visuelle Informationen, also Kameradaten, zur simultanen Lokalisierung und Kartierung. Kameras erfassen visuelle Merkmale der Umgebung, und der Algorithmus berechnet daraus die Position des Geräts.
 
-4.3 Welche Parameter sind bei der Darstellung von Kreisen im Parameterraum sinnvoll. Wie manifestiert sich ein Punkt dabei im Parameterraum? Wie sind dadurch Kreise zu detektieren? Ev. BSP
+- Ziel: Lokalisierung des Roboters und simultane Erstellung einer Karte der Umgebung.
+- Input: Visuelle Sensordaten (monokular/stereo), oft kombiniert mit interner Odometrie.
+- Herausforderung: Henne-Ei-Problem — Für die Lokalisierung wird eine Karte benötigt; für die Kartierung wird eine präzise Lokalisierung vorausgesetzt.
 
-4.4 Warum wird die Generalized Hough Transformation benötigt? Wie wird die R-Tabelle errechnet? Hat die R-Tabelle die Bedeutung eines „Form-Modelles“? Erhöht sich die Genauigkeit des Modells, wenn mehr Punkte entlang der Kontur in die R-Tabelle verspeichert werden? Was ist die Bedeutung vom Index phi und wie kann man die lokale Steigung der Kontur berechnen. Erlaubt die R-Tabelle das Rekonstruieren von Kandidaten-Mittelpunkten der Form?
+**Ablauf und Konzept**
+<p float="center">
+    <img src="./img/vslam_1.png" width="100" />
+    <img src="./img/vslam_2.png" width="100" />
+</p>
 
-4.5 Was sind gute lokale Features in Bildern und warum? Motivieren Sie die Bedeutung von lokalen Features für unterschiedliche Anwendungsdomänen (Panoramafotos, 3D Rekonstruktion, Tracking, Objekterkennung,…). Welche Anforderungen und Qualitätsindikatoren werden an lokale Features gestellt?
+1. Start: Roboter beginnt bei Pose (0,0); Umgebung ist unbekannt.
+2. Bewegung gemäß interner Odometrie (Positionsschätzung), erste Unsicherheiten entstehen.
+3. Beobachtung erster Merkmale (z.B. durch SIFT); Position dieser Features ist nur ungenau bekannt.
+4. Weitere Bewegung: Fehler in Pose-Schätzung akkumulieren.
+5. **Loop Closure:** Ein zuvor gesehenes Merkmal wird erneut erkannt. Dies erlaubt Korrektur von Pfad und Karte durch Optimierung.
+    - Führt zu signifikanter Reduktion kumulierter Fehler.
+    - Erhöht Vertrauen in die Lokalisierung und die Kartengenauigkeit.
+    - Ist entscheidend für globale Konsistenz der Karte.
 
-4.6 Welche Features werden beim Hessian/Harris Corner Detector erkannt und wie? Welche Bedeutung haben in diesem Zusammenhang Gradienten, die Hesse Matrix sowie Eigenwerte? Welche Anwendungsdomänen gibt es, bei denen Feature-Detektion essentiell ist?
 
-4.7 Was bedeutet scale invariance? Wie kann man Skalierungsunaghängigkeit erzielen, vgl. Filterpyramide, SIFT etc. Erläutern Sie Difference of Gaussian und wie dadurch Skalierungsunabhängigkeit erzielt werden kann.
+**Anwendungsdomänen von VSLAM**
+- Autonome Fahrzeuge – Navigation ohne GPS, z.B. in Tunneln oder Städten.
+- Rettungsroboter – Kartierung unbekannter Gebiete (z.B. Höhlen, eingestürzte Gebäude).
+- Haushaltsroboter – Staubsauger, Rasenmäher: systematische Umgebungserfassung.
+- Augmented Reality / Virtual Reality – Echtzeitlokalisierung von mobilen Kameras.
+- Drohnen / UAVs – Umgebungserkennung für autonome Flugnavigation.
 
-4.8 Wie wird bei SIFT der 128-Element Feature-Vektor errechnet. Was bedeutet in diesem Zusammenhang Feature-Trajektorie und wie werden Features diesbezüglich „gematched“? Angenommen es werden zwei Mengen an SIFT-Features mittels Feature-Trajektorie in Verbindung gesetzt – wie kann die Ergebnisqualität zusätzlich verbessert werden?
+---
 
-4.9 Erläutern Sie das Histogram of Oriented Gradients (HOG). Welche zentralen Features werden hierbei zur Berechnung des L2-normalisierten 36-bin Feature-Vektors herangezogen? Wie wird HOG invariant bzgl. affiner Transformationen wie etwa Skalierung, Translation oder Rotation?
+**4.2 Hough-Transformation von Linien (konventionelle Geradengleichung – keine Polarkoordinaten): Linie im Ortsraum wird zu Punkt im Parameterraum. Geradengleichung + Skizze. Wie kann nun damit eine Linie als lokales Max. im Parameterraum detektiert werden (Skizze)**
 
-4.10 Erläutern Sie die Bedeutung von Bild-Charakteristika zur Segmentierung/Klassifikation. Warum muss dabei i.d.R. ein Feature-Vektor verwendet werden, um mehrere Klassen in robuster Weise voneinander trennen zu können.
+Ein Punkt im Ortsraum $(x_0, y_0)$ entspricht einer Geraden im Parameterraum $(m, b)$, gemäß:
 
+  $$
+  b = -x_0 \cdot m + y_0
+  $$
+
+* Für jedes Pixel im Bild (Ortsraum) wird diese Gleichung genutzt, um alle möglichen Geraden zu berechnen, die durch diesen Punkt verlaufen könnten -> **je ein Linienzug im Parameterraum**.
+
+* **Im Parameterraum**:
+  * Wenn sich viele dieser Linien in einem Punkt schneiden, bedeutet das, dass mehrere Pixel im Bild auf derselben Linie im Ortsraum liegen.
+  * Der Schnittpunkt ist ein lokales Maximum im Akkumulator, das eine detektierte Linie repräsentiert.
+
+<p float="center">
+    <img src="./img/hough_line_detection.png" width="600" />
+</p>
+
+---
+
+**4.3 Welche Parameter sind bei der Darstellung von Kreisen im Parameterraum sinnvoll.**
+
+Ein Kreis im Ortsraum wird durch folgende Parameter beschrieben:
+* $a, b$: Mittelpunkt des Kreises
+* $r$: Radius
+
+
+**Wie manifestiert sich ein Punkt dabei im Parameterraum?**
+
+Punkt im Ortsraum -> Kreis im Parameterraum:
+
+* Ein einzelner Bildpunkt $(x_0, y_0)$ könnte auf vielen möglichen Kreisen liegen.
+* Für jeden möglichen Radius $r$ ergibt sich eine Kreislinie im Parameterraum (a, b), auf der der Mittelpunkt (des Kreises aus dem Ortsraum) liegen müsste.
+* Das heißt: **Ein Punkt im Ortsraum wird zu einer Kreislinie im Parameterraum**.
+
+**Wie sind dadurch Kreise zu detektieren? Ev. BSP**
+
+* Für viele Punkte im Bild (z. B. Kantenpunkte): Berechne alle möglichen Kreismittelpunkte für feste Radien.
+* Im **dreidimensionalen Parameterraum $(a, b, r)$**:
+
+  * Viele Punkte erzeugen viele Kreislinien.
+  * Wo sich viele dieser Linien schneiden, liegt ein lokales Maximum -> ein echter Kreis ist erkannt.
+
+<p float="center">
+    <img src="./img/hough_circle_detection.png" width="600" />
+</p>
+
+---
+
+**4.4 Warum wird die Generalized Hough Transformation benötigt?**
+
+Die normale Hough-Transformation funktioniert nur bei einfachen Formen (Linien, Kreise). Für beliebige Formen (z. B. komplizierte Konturen) braucht man die generalizierte Hough Transformation.
+
+**Wie wird die R-Tabelle errechnet? Hat die R-Tabelle die Bedeutung eines „Form-Modelles“?**
+
+* Ein **Referenzpunkt** $P_c = (X_c, Y_c)$ wird gewählt (z. B. Mittelpunkt).
+* Für jeden **Konturpunkt** $P_i = (X_i, Y_i)$:
+
+  * Berechne den Abstand $r_i$ zum Referenzpunkt.
+  * Bestimme die Kantenrichtung $\phi$ (z. B. mit Sobel-Operator).
+  * Berechne den Winkel $\alpha_i$ zwischen $P_i$ und $P_c$.
+* Die Werte $(r_i, \alpha_i)$ werden in der R-Tabelle nach Winkel $\phi$ sortiert gespeichert.
+
+Ja, die R-Tabelle ist das Modell der Form.
+
+<p float="center">
+    <img src="./img/hough_general_1.png" width="200" />
+    <img src="./img/hough_general_2.png" width="400" />
+</p>
+
+
+**Erhöht sich die Genauigkeit des Modells, wenn mehr Punkte entlang der Kontur in die R-Tabelle verspeichert werden?**
+
+Ja, mehr Punkte in der R-Tabelle = genaueres Modell.
+
+
+**Was ist die Bedeutung vom Index phi und wie kann man die lokale Steigung der Kontur berechnen.**
+
+φ ist der Winkel der Kante am Konturpunkt (lokale Richtung), berechnet aus dem **Gradienten** ($g_x, g_y$). Damit sucht man passende Vektoren in der R-Tabelle.
+
+
+**Wie berechnet man die lokale Steigung der Kontur?**
+Mit den **x- und y-Gradienten**, z. B. aus dem **Sobel-Filter**:
+
+$$
+\phi = \arctan\left(\frac{g_y}{g_x}\right)
+$$
+
+**Erlaubt die R-Tabelle das Rekonstruieren von Mittelpunkten ($P_c$) der Form?**
+Ja, durch Rückrechnung mit den gespeicherten Werten $(r_i, \alpha_i)$ und dem Winkel $\phi$.
+
+---
+
+**4.5 Was sind gute lokale Features in Bildern und warum?**
+
+Gute lokale Features sind Ecken oder Kanten, also Bildbereiche mit starken Änderungen in mehreren Richtungen. Homogene Flächen sind ungeeignet, da sie keine markanten Merkmale enthalten.
+
+<p float="center">
+    <img src="./img/image_features.png" width="400" />
+</p>
+
+**Motivieren Sie die Bedeutung von lokalen Features für unterschiedliche Anwendungsdomänen (Panoramafotos, 3D Rekonstruktion, Tracking, Objekterkennung,…).**
+
+Sie helfen, markante Punkte wiederzuerkennen, z. B. für:
+- Panoramafotos: Bilder zusammensetzen
+- 3D-Rekonstruktion: gleiche Punkte aus verschiedenen Blickwinkeln (mehrere Kameras)
+- Tracking: Objektverfolgung über Zeit
+- Objekterkennung: bekannte Formen wiederfinden
+- Robotik (z. B. visuelle Navigation)
+
+
+**Welche Anforderungen und Qualitätsindikatoren werden an lokale Features gestellt?**
+
+- Repetitivität: gleiche Punkte zuverlässig finden, auch in mehreren Bildern
+- Affine Invarianz: robust gegen Translation, Rotation, Skalierung
+- Robustheit: stabil trotz Rauschen, Unschärfe, Helligkeitsänderung
+- Unverwechselbarkeit (Distinctiveness): sollte einzigartige Strukturen zeigen
+- Ausgewogene Anzahl: genug, um das Bild gut zu beschreiben, aber nicht zu viele
+- Effizienz: schnell genug für Echtzeitanwendungen (z. B. Tracking)
+
+---
+
+**4.6 Welche Features werden beim Hessian/Harris Corner Detector erkannt und wie?** 
+Beide Verfahren erkennen Ecken, also Punkte mit starkem Intensitätswechsel in mehreren Richtungen.
+
+- Hessian-Detektor: Schaut sich an, wie stark sich Helligkeit in x- und y-Richtung ändert (mit 2. Ableitungen). Wenn sich in beiden Richtungen viel verändert, erkennt er eine Ecke.
+- Harris-Detektor: Nutzt 1. Ableitungen (also wie schnell Helligkeit sich ändert) und baut daraus eine Matrix. Wenn sich die Helligkeit in mehreren Richtungen gleichzeitig stark ändert, sind beide Eigenwerte groß, das ist eine Ecke. Die Ecke wird erkannt, wenn ein gewisser Schwellwert überschritten wird.
+
+
+**Welche Bedeutung haben in diesem Zusammenhang Gradienten, die Hesse Matrix sowie Eigenwerte?**
+- Gradienten: Zeigen, wie stark und in welcher Richtung sich die Helligkeit im Bild ändert (1. Ableitungen in x- und y-Richtung). Grundlage für die Eckenerkennung, da Ecken starke Helligkeitswechsel in mehreren Richtungen zeigen.
+
+- Hesse-Matrix (Hessian): Verwendet die 2. Ableitungen der Helligkeit (also wie stark sich der Gradient selbst ändert). Gibt Auskunft darüber, ob die Änderung stark genug ist und in welchen Richtungen Struktur im Bild vorhanden ist. Eine große Determinante der Hesse-Matrix bedeutet, dass sich die Helligkeit in x- und y-Richtung stark ändert -> mögliche Ecke.
+
+- Eigenwerte (bei Harris & Hessian): Zeigen die Stärke der Änderungen in den Hauptachsen (Richtungen) der Matrix.
+    - Beide Eigenwerte groß: starke Änderung in zwei Richtungen -> Ecke
+    - Ein Eigenwert groß, der andere klein: Kante
+    - Beide klein: Fläche ohne Struktur
+
+
+**Welche Anwendungsdomänen gibt es, bei denen Feature-Detektion essentiell ist?**
+
+- Panoramafotos: Bilder zusammensetzen
+- 3D-Rekonstruktion: gleiche Punkte aus verschiedenen Blickwinkeln (mehrere Kameras)
+- Tracking: Objektverfolgung über Zeit
+- Objekterkennung: bekannte Formen wiederfinden
+- Robotik (z. B. visuelle Navigation)
+
+
+---
+
+**4.7 Was bedeutet scale invariance?**
+
+Scale Invariance (Skalierungsunabhängigkeit) bedeutet, dass ein Feature-Detektor Merkmale erkennt, egal wie groß oder klein das Objekt im Bild erscheint (z.B. durch Entfernung oder Zoom).
+
+Klassische Detektoren wie Harris/Hessian sind nicht scale-invariant. Ein Objekt, das bei kleiner Skalierung ein scharfes Detail zeigt, kann bei größerer Skalierung glatt und unauffällig wirken -> wird dann nicht mehr als Feature erkannt.
+
+
+**Wie kann man Skalierungsunabhängigkeit erzielen, vgl. Filterpyramide, SIFT etc.**
+
+Lösung: Verwendung von Scale Spaces
+-> Bilder werden in verschiedenen Auflösungen (Skalen) betrachtet.
+
+<p float="center">
+    <img src="./img/scale_invariance_scale_spaces.png" width="400" />
+</p>
+
+1. Filterpyramide: 
+- Das Bild wird mehrfach geglättet (durch Gaussian-Filter mit verschiedenen σ) und runterskaliert.
+- Feature-Detektion wird auf allen Ebenen wiederholt. So kann man Features in verschiedenen Größen finden.
+
+2. SIFT (Scale-Invariant Feature Transform): Baut einen skalierbaren Bildraum auf, indem das Bild mit verschiedenen Gaussian-Filtern bearbeitet wird. Aus den gefilterten Bildern werden dann Differenzbilder (Difference of Gaussian, DoG) gebildet.
+
+
+**Erläutern Sie Difference of Gaussian und wie dadurch Skalierungsunabhängigkeit erzielt werden kann.**
+
+DoG ist die **Differenz zweier geglätteter Bilder**, die mit zwei leicht unterschiedlichen Sigma-Werten gefiltert wurden. Man zieht das stärker geglättete Bild vom weniger geglätteten ab.
+
+<p float="center">
+    <img src="./img/dog_1.png" width="400" />
+</p>
+
+**Warum macht man das?**: Diese Differenz hebt Bereiche hervor, in denen sich die Helligkeit im Bild stark ändert, das sind Kanten oder Ecken.
+
+**Skalierungsunabhängigkeit**:
+* Indem man DoG auf verschiedenen Skalen (also für viele verschiedene σ) berechnet, betrachtet man das Bild aus mehreren "Entfernungen".
+* Auf kleinen Skalen sieht man feine Details, auf großen Skalen sieht man grobe Strukturen.
+* Sucht man nun lokale Maxima oder Minima im Raum aus (x, y, σ), findet man Punkte, die auf allen Skalen gut erkennbar sind. Diese Punkte sind skalierungsinvariant, weil sie nicht von der Größe des Objekts abhängen, sondern von seiner Struktur über Skalen hinweg.
+
+In SIFT nutzt man genau diese DoG-Extrema als stabile Merkmale, die man auch dann wiederfindet, wenn ein Objekt im Bild größer oder kleiner erscheint. So ist der Algorithmus robust gegenüber Zoom oder Entfernung.
+
+---
+
+**4.8 Wie wird bei SIFT der 128-Element Feature-Vektor errechnet.**
+
+1. **Vorbereitung (Steps 1-3):**
+SIFT detektiert zunächst stabile Keypoints über mehrere Skalen (DoG-Pyramide), lokalisiert sie präzise und weist jedem Keypoint eine dominante Orientierung zu, um Rotationsinvarianz zu gewährleisten.
+
+2. **Step 4 – Keypoint Description:**
+* Um jeden Keypoint wird ein 16x16 Pixel großes lokales Umfeld betrachtet.
+* Dieses Umfeld wird in 16 kleine Regionen (4x4 Pixel) aufgeteilt.
+* In jeder Region wird ein Histogramm der lokalen Gradientenorientierungen mit 8 Bins erstellt.
+* Die Gradientenwerte werden mit einer Gauß-Gewichtung und der Gradientenstärke gewichtet.
+* Die 16 Histogramme mit je 8 Werten werden aneinandergereiht -> ergibt den 128-dimensionalen Feature-Vektor (16 x 8 = 128).
+* Abschließend wird der Vektor normalisiert, um Beleuchtungsänderungen robust zu begegnen.
+    <p float="center">
+        <img src="./img/sift_step_4.png" width="300" />
+    </p>
+
+
+**Was bedeutet in diesem Zusammenhang Feature-Trajektorie und wie werden Features diesbezüglich „gematched“?**
+
+Feature-Trajektorie: Die Verbindung eines SIFT-Features aus Bild A mit dem korrespondierenden Feature aus Bild B, also die Zuordnung von Merkmalen zwischen zwei Bildern.
+
+Matching:
+* Beim Matching sucht man für jeden Feature-Vektor aus Bild A den ähnlichsten Feature-Vektor aus Bild B (meist mit der euklidischen Distanz).
+* Um sicherzugehen, dass die Zuordnung zuverlässig ist, wird der Ratio-Test angewendet: Nur wenn der beste Match deutlich besser ist als der zweitbeste (z.B. mindestens 20% besser), wird die Verbindung akzeptiert.
+* So entstehen stabile Feature-Trajektorien zwischen Bildern.
+
+
+
+**Angenommen es werden zwei Mengen an SIFT-Features mittels Feature-Trajektorie in Verbindung gesetzt – wie kann die Ergebnisqualität zusätzlich verbessert werden?**
+
+Clusterbildung und Hough-Transform:
+* Features, die zusammen ähnliche Bewegungen oder Transformationsparameter (z.B. affine Transformation) aufweisen, werden zu Clustern zusammengefasst.
+* Mittels Hough-Transform stimmen die Keypoints über mögliche Objektpositionen und -orientierungen ab.
+* Der Cluster mit den meisten "Votes" repräsentiert die wahrscheinlichste Übereinstimmung, was die Zuverlässigkeit gegenüber Ausreißern und falschen Matches deutlich erhöht.
+
+---
+
+**4.9 Erläutern Sie das Histogram of Oriented Gradients (HOG).**
+
+HOG ist ein Verfahren zur Beschreibung von Bildern, das vor allem für die Erkennung von Objekten (z.B. Personen) eingesetzt wird. Es analysiert die Verteilung von Kantenrichtungen in kleinen Bereichen eines Bildes.
+
+**Welche zentralen Features werden hierbei zur Berechnung des L2-normalisierten 36-bin Feature-Vektors herangezogen?**
+
+1. **Gradientenberechnung:**
+
+* Zuerst werden horizontale und vertikale Gradienten mit Sobel-Filtern berechnet.
+* Daraus ergeben sich für jeden Pixel die Gradientenstärke (Magnitude) und die Gradientenrichtung.
+    <p float="center">
+        <img src="./img/hog_1.png" width="200" />
+    </p>
+
+
+2. **Histogramme pro Pixelzelle:**
+
+* Das Bild wird in kleine Zellen von z.B. 8×8 Pixeln unterteilt.
+* Für jede Zelle wird ein Histogramm der Gradientenrichtungen berechnet, aufgeteilt in 9 Bins (also 9 Winkelbereiche von 0° bis 180°, da die Gradientenrichtung "unsigned" ist).
+    <img src="./img/hog_2.png" width="600" />
+* Die Gradienten werden gewichtet nach ihrer Stärke und auf die beiden nächsten Bins verteilt (Interpolation).
+    <img src="./img/hog_3.png" width="600" />
+    
+
+3. **Block-Normalisierung:**
+
+* Vier benachbarte Zellen (also 2x2 Zellen = 16×16 Pixel) werden zusammengefasst zu einem Block.
+* Die 4 Histogramme (je 9 Bins) ergeben einen Vektor mit 36 Werten (4×9).
+* Dieser Vektor wird L2-normalisiert (auf die Länge 1 skaliert), um Beleuchtungsunterschiede auszugleichen (beschreibt nur die relative Verteilung der Kantenrichtungen, nicht die absolute Stärke).
+    <img src="./img/hog_4.png" width="600" />
+
+4. **Endergebnis:**
+
+* Das Bild wird von vielen solchen Blöcken abgedeckt, und die 36-Element-Vektoren dieser Blöcke werden aneinandergereiht, um den endgültigen HOG-Feature-Vektor zu bilden.
+
+
+**Wie wird HOG invariant bzgl. affiner Transformationen wie etwa Skalierung, Translation oder Rotation?**
+
+* **Skalierung:**
+    Durch Vorverarbeitung wird das Bild auf eine standardisierte Größe skaliert, sodass die Größe der Zellen und Blöcke relativ zum Bild konstant bleibt.
+
+* **Translation (Verschiebung):**
+    HOG arbeitet lokal in kleinen Zellen und Blöcken, deshalb verschieben sich die lokalen Histogramme mit dem Bildinhalt mit und bleiben konsistent.
+
+* **Rotation:**
+    HOG verwendet „unsigned“ Gradienten (0° bis 180°), wodurch eine 180°-Rotation oder Spiegelung weniger Einfluss auf den Histogrammverlauf hat.
+
+
+---
+
+**4.10 Erläutern Sie die Bedeutung von Bild-Charakteristika zur Segmentierung/Klassifikation. Warum muss dabei i.d.R. ein Feature-Vektor verwendet werden, um mehrere Klassen in robuster Weise voneinander trennen zu können.**
+
+Man nutzt mehrere Bild-Charakteristika gleichzeitig in einem Feature-Vektor, um verschiedene Klassen zuverlässig voneinander zu trennen, da einzelne Merkmale oft zu ungenau oder irreführend sind. Mehr Merkmale = bessere Unterscheidungskraft.
+
+* **Bild-Charakteristika** sind Merkmale oder Eigenschaften eines Bildes (z.B. Farbe, Textur, Kanten, Form), die helfen, verschiedene Bildbereiche oder Objekte zu unterscheiden.
+* Bei der **Segmentierung** werden Bildbereiche in sinnvolle Teile (z.B. Himmel, Boden, Objekte) getrennt.
+* Bei der **Klassifikation** wird jedem Bild oder Bildteil eine Kategorie (Klasse) zugewiesen, z.B. „Auto“, „Mensch“ oder „Hintergrund“.
+
+Warum ein Feature-Vektor:
+* Ein einzelnes Merkmal (z.B. nur Farbe) ist oft nicht ausreichend, weil verschiedene Klassen sich in einem Merkmal überlappen können.
+* Ein Feature-Vektor fasst viele verschiedene Merkmale zusammen (z.B. Farbe, Textur, Form, Kantenmuster). Dadurch kann man besser Unterschiede erkennen.
+
+
+
+
+---
 
 ---
 ## 5. 3D Rekonstruktion [6]
