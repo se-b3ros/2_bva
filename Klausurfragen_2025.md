@@ -2,16 +2,84 @@
 
 ## 0.Overview [5]
 
-0.1 Wie kann man ein überbestimmtes Gleichungssystem lösen. Erläutern Sie die erforderlichen Schritte. Formen Sie die Gleichungen für ein konkretes BSP um, sodass via Matrix + Falk-Schema lösbar. Welche Vor- und Nachteile besitzt diese Strategie des Gleichungslösens?
+**0.1 Wie kann man ein überbestimmtes Gleichungssystem lösen. Erläutern Sie die erforderlichen Schritte. Formen Sie die Gleichungen für ein konkretes BSP um, sodass via Matrix + Falk-Schema lösbar. Welche Vor- und Nachteile besitzt diese Strategie des Gleichungslösens?**
 
-0.2 Geben Sie eine (eigene) Definition für Computer Vision. Welche Disziplinen sind mit welchen Konzepten/Algorithmen involviert?
 
-0.3 Was sind klassische Anwendungsgebiete der Computer Vision?
+Ein überbestimmtes Gleichungssystem liegt vor, wenn die Anzahl der nicht-redundanten Gleichungen größer ist als die Anzahl der zu lösenden oder zu approximierenden Variablen. Im Allgemeinen lassen diese Gleichungssysteme keine eindeutige und exakte Lösung zu, weshalb ein Fehler pro Gleichung eingeführt wird.
 
-0.4 Welche Bildeigenschaften sind für die menschliche Wahrnehmung relevant?
+Lösung eines überbestimmten Gleichungssystems:
 
-0.5 Skizzieren Sie Computer Vision mit den relevantesten Verfahren grob als Wissenslandkarte.
+Das Ziel bei der Lösung eines überbestimmten Gleichungssystems ist es, den Gesamtfehler als Funktion der quadrierten Differenzen zu minimieren, um die bestmögliche Annäherung an eine Lösung zu finden. Dies wird durch die Umformung in die sogenannte **Gaußsche Normalgleichung** erreicht.
 
+**Erforderliche Schritte:**
+
+1.  **Darstellung des Systems:** Das ursprüngliche überbestimmte Gleichungssystem wird in der Form Ax = B ausgedrückt, wobei A die Koeffizientenmatrix, x der Vektor der unbekannten Variablen und B der Ergebnisvektor ist.
+2.  **Umwandlung in die Gaußsche Normalgleichung:** Um eine lösbare Form zu erhalten, multipliziert man beide Seiten der Gleichung Ax = B von links mit der Transponierten der Matrix A (Aᵀ). Dies führt zur Gaußschen Normalgleichung: **AᵀAx = Aᵀb**.
+3.  **Lösung:** Die Gaußsche Normalgleichung kann dann durch verschiedene Methoden gelöst werden, unter anderem durch eine Erweiterung des **„Falk-Schemas“ der Matrixmultiplikation**. Die Lösung für x ergibt sich dann durch Multiplikation mit der Inversen von (AᵀA): **x = (AᵀA)⁻¹ * (Aᵀb)**.
+
+TODO: Kontretes Beispiel
+
+**Vorteile:**
+
+* Diese Strategie ermöglicht die **näherungsweise Lösung von überbestimmten Gleichungssystemen**. Dies ist besonders nützlich in Anwendungsfällen wie der Registrierung oder Kamerakalibrierung, wo eine größere Anzahl von Referenzpunkten zur Stabilisierung des Ergebnisses und zur Annäherung einer Transformationsmatrix verwendet wird.
+
+**Nachteile:**
+
+* Ungenauigkeiten durch Gleitkommazahl-Arithmetik
+* Beschränkung der Lösungseigenschaften
+
+---
+
+**0.2 Geben Sie eine (eigene) Definition für Computer Vision. Welche Disziplinen sind mit welchen Konzepten/Algorithmen involviert?**
+
+Computer Vision ist eine Erweiterung der Bildverarbeitung, die sich mit der komplexen und fortgeschrittenen Bildanalyse befasst. Ihr Ziel ist es, gewünschte Strukturen in Bildern zu erkennen oder zu segmentieren, um ein vollständiges Bild- und Szenenverständnis zu ermöglichen. Die Eingabedaten können einzelne monokulare Bilder, Videostreams, 3D-Bilder, zusätzliche Sensordaten oder 3D-Oberflächenmodelle umfassen, oft auch große Mengen visueller Daten im Sinne von Big Data.
+
+- **Bildverarbeitung**: Filterung, Bildrekonstruktion, Farbtransformationen, einfache Segmentierungsaufgaben.
+- **Optik und Bildgebungssysteme**: Kamerakalibrierung, Verzerrung, 3D-Rekonstruktion.
+- **Computergrafik**: Geometrische Modellierung, Formmodelle, Reflexionen, Beleuchtungsmodelle, Testdatengenerierung, 3D-Rekonstruktion, Ergebnisdarstellung.
+- **Mustererkennung**: Texturen, SIFT (Scale-Invariant Feature Transform), VSLAM (Visual Simultaneous Localization and Mapping).
+- **Robotik**: VSLAM, autonomes Fahren, Produktionsinspektion.
+- **Künstliche Intelligenz und Heuristiken**: Merkmalsbasierte Klassifizierung, Registrierung, symbolische Repräsentation.
+- **Mathematik, Numerik**: Projektive Geometrie, Wahrscheinlichkeiten, Statistik, Signalverarbeitung.
+
+---
+
+**0.3 Was sind klassische Anwendungsgebiete der Computer Vision?**
+
+- **3D-Rekonstruktion aus planaren Bildern**
+- **Erkennung (Recognition)**: die verschiedene Formen annehmen kann:
+    - Erkennung von Markern und Objekten.
+    - Gesichtserkennung, Iris-, Fingerabdruck-, Gesten- und Handschrifterkennung.
+    - Erkennung der menschlichen Körperhaltung und Aktivitäten.
+    - Optische Zeichenerkennung (OCR).
+- **Klassifikation/Segmentierung**: um Objekte zu identifizieren und abzugrenzen:
+    - Kontursegmentierung von Objekten, um gewünschte Objekte zu extrahieren und zu charakterisieren.
+    - Semantische visuelle Klassifikation ganzer Bilder.
+    - Komplexere Schlussfolgerungen aus Bilddaten unter Nutzung von Künstlicher Intelligenz (KI). Hierbei wird oft eine semantische Interpretation von Bildern als Voraussetzung benötigt, beispielsweise durch:
+        - **Klassifikation (Classification)**: Das gesamte Bild wird mit einem "Wort" getaggt.
+        - **Objektdetektion (Object Detection)**: Zusätzlich zur Klassifikation wird der Bereich von Interesse (ROI) um das potenziell verdeckte Schlüsselobjekt erkannt, sowohl für einzelne als auch für mehrere Objekte.
+        - **Instanzsegmentierung (Instance Segmentation)**: Die präzise sichtbare oder verdeckte Pixelregion, die sich auf das klassifizierte Objekt bezieht, wird markiert.
+- **Navigation**: insbesondere in autonomen Systemen: Autonomes Fahren an Land, unter Wasser und im Weltraum.
+- **Mixed Reality (Erweiterte Realität)**: die reale und computergenerierte Objekte verschmilzt.
+- **Synthetische Bilder**: Morphing und computergenerierte Bilder (z.B. in Filmen)
+
+---
+
+**0.4 Welche Bildeigenschaften sind für die menschliche Wahrnehmung relevant?**
+
+- Oberflächenfarbe
+- 3D-Sehen aufgrund der Parallaxe der menschlichen Augen
+- Beleuchtung/Schattierung zur Annäherung von 3D-Form und Entfernung
+- Bildtextur
+- Form- und Oberflächeneigenschaften
+- A-priori-Wissen über gelernte Objekte, deren Größe und 3D-Struktur
+- Stereotypisches Denken als "Kurzschluss" für das menschliche Erkennungssystem
+
+---
+
+**0.5 Skizzieren Sie Computer Vision mit den relevantesten Verfahren grob als Wissenslandkarte.**
+
+<img src="./img/cv_algorithm.png" width="600" />
 
 ---
 ## 1.Linear Imaging Systems [9]
