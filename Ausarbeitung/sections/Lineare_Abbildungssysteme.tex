@@ -83,6 +83,27 @@ Kamerakoordinaten und Pixelkoordinaten im Bildsystem. Wo hingegen extrinsische K
 im dreidimensionalen Raum beschreiben.
 
 \subsection{Welche intrinischen, extrinsischen Parameter gibt es?}
+Die Matrix ermöglicht es, 3D-Punkte auf die 2D-Bildebene zu projizieren und stellt den Zusammenhang zwischen dem Kamera- und dem 
+Bildkoordinatensystem her. Die Bestimmung dieser Parameter erfolgt durch Kamerakalibrierung, bei der spezielle Kalibrierungsmuster 
+(wie Schachbrettmuster) verwendet werden, um die geometrischen Eigenschaften der Kamera zu berechnen.\\
+
+\begin{minipage}{0.2\linewidth}
+  $
+  K = 
+  \begin{bmatrix}
+  f_x & s & c_x\\
+  a & f_y & c_y\\
+  0 & 0 & 1
+  \end{bmatrix}
+  $
+\end{minipage}
+\begin{minipage}{0.8\linewidth}
+  \begin{itemize}
+    \item $f_x$, $f_y$: Brennweite in Pixeleinheiten (horizontal und vertikal) - dies berücksichtigt sowohl die physische Brennweite als auch die Pixelgröße
+    \item $c_x$, $c_y$: Hauptpunkt-Koordinaten - der optische Mittelpunkt des Bildsensors
+    \item $s$: Scherungsparameter (meist 0, da Pixel normalerweise rechteckig sind)
+  \end{itemize}
+\end{minipage}
 
 \subsection{Welche Arten der Verzerrung gibt es bei der Kamera-Kalibrierung?}
 
