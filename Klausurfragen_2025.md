@@ -606,26 +606,183 @@ Warum ein Feature-Vektor:
 * Ein einzelnes Merkmal (z.B. nur Farbe) ist oft nicht ausreichend, weil verschiedene Klassen sich in einem Merkmal überlappen können.
 * Ein Feature-Vektor fasst viele verschiedene Merkmale zusammen (z.B. Farbe, Textur, Form, Kantenmuster). Dadurch kann man besser Unterschiede erkennen.
 
-
-
-
----
-
 ---
 ## 5. 3D Rekonstruktion [6]
 
-5.1 Nennen Sie Verfahren, um mit einzelnen monokularen Bildern bzw. mehrerer monokularer Bilder Objekte 3D zu rekonstruieren. Vergleichen Sie die Ansätze.
+**5.1 Nennen Sie Verfahren, um mit einzelnen monokularen Bildern bzw. mehrerer monokularer Bilder Objekte 3D zu rekonstruieren. Vergleichen Sie die Ansätze.**
 
-5.2 Nennen Sie Anwendungsgebiete der 3D Rekonstruktion. Geben Sie eine Definition für "3D Rekonstruktion" in eigenen Worten. Erläutern Sie, warum in 2D Bildern die Größe von Objekten nicht ableitbar ist
+**Einzelne monokulare Bilder:**
+Man hat 2D-Bild und Kamera Kalibrierung aber keine Tiefeninformation
 
-5.3 Führen Sie über die Größenbestimmung in Bildern via Referenzobjekte aus. Erläutern Sie Shape from Shading.
+* **Größenbestimmung via Referenzobjekte - Size from orthogonal marker**
+    * Maßstabsschätzung durch bekannte Objekte (z.B. Lineal, Checkerboard)
+    * Wichtig für Kamera-Kalibrierung, forensische Anwendungen
 
-5.4 Erläutern Sie Deep Depth from Focus. Erläutern Sie Shape from texture / structured light
+* **Shape from shading (SfS)**
+    * Physikalisches Modell hinsichtlich Lichtrichtung, Ansichtsrichtung und Oberflächeneigenschaften 
+    * Schätzung der Oberflächentiefe aus Helligkeitsverläufen
+    * Nutzt verschiedene Reflektionsmodelle (z.B. Phong) -> kann reverse-engineered werden mit CGI
+    * Ungefähre Annäherung der Gradienten / Topographie, aber keine absoluten Distanzen 
 
-5.5 Führen Sie über den Einsatz von Deep Learning zur Bestimmung der Tiefe / 3D Form aus.
+* **[Deep] Depth from Focus (DFF, DDFF)**
+    * Idee: Objekte, die weiter weg sind, erscheinen unscharf auf dem Bild -> Tiefe aus der Bildschärfe
+    * Funktioniert mit Fokus-Stapel -> mehrere Bilder mit verschiedenen Schärfeebenen
+    * Schwierig erreichbar bei modernen Geräten (auto-focus mus deaktiviert werden)
+    * Ergebnisse sind beeinflusst von Textur und Schatten
 
-5.6 Erläutern Sie Stereo Matching und Structure from Motion. Welche Bilder sind dafür gut geeignet? Erläutern Sie die Silhouette Reconstruction.
+* **Shape from Texture: Structured Light**
+    * Idee: Wenn eine regelmäßige Textur perspektivisch verzerrt ist, kann daraus Tiefe geschätzt werden.
+    * Structured Light: Projektor + 2 Kameras + codiertes Lichtmuster
+    * Probleme bei Okklusionen, daher hierarchische Rekonstruktion nötig
+    * Alternative: Tiem of Flight (ToF)
 
+* **Depth-Sensor + Structure from Motion am Beispiel von Microsoft Kinect**
+    * Kinect verwendet IR-Tiefenkamera, um die Entfernung von Oberflächen zu messen
+    * Kombination von Tiefenbild + Farbbild ergibt Textur und Tiefenbild
+
+* **Deep Learning**
+    * Netzwerke schätzen relative Tiefe aus Bildinhalten
+    * Nutzung von CNNs (z.B. U-Net), trainiert auf CGI-Daten
+    * 2D–3D-Rekonstruktion über morphbare Modelle (z.B. Gesicht, Haare)
+
+**Mehrere monokulare Bilder:**
+Hier wird echte 3D-Tiefe rekonstruiert, da mehrere Perspektiven genutzt werden
+
+* **Epipolargeometrie**
+    * Ein Punkt im ersten Bild liegt auf einer Epipolarlinie im zweiten.
+    * Schnittpunkte mehrerer Linien -> rekonstruierbare 3D-Punkte
+    * Basis für viele 3D-Verfahren
+
+    <img src="img/3d_epipolar.png" width="400" />
+
+* **Stereo Matching**
+    * Zwei nahe aneinanderliegende Kameras mit bekannter Distanz sind auf die selbe Szene gerichtet -> basierend auf dem Prinzip der menschlichen binokularen Tiefenwahrnehmung 
+    * Disparitätskarte durch horizontale Verschiebung der Bildpunkte
+    * Tiefe über Parallaxeneffekt (Verschiebung der Position eines Objekts, wenn es aus verschiedenen Blickwinkeln betrachtet wird)
+    * Probleme bei niedriger Textur oder einfarbigen Flächen
+
+    <img src="img/3d_stereo_matching.png" width="400" />
+
+* **Bekannte Kameraposition - Silhouette Reconstruction**
+    * Nutzung mehrerer Segmentierungsbilder (Silhouetten) zur Rekonstruktion der Visual Hull
+    * Erfordert keine Punktkorrespondenz - nur binäre Segmentierungsmasken
+    * Beispiel: Körpermodell aus 8 Kameraansichten (alle 45°), Person rotiert
+    * Ergebnis: grob konvexe Form, konkave Teile nicht erfasst
+
+    <img src="img/3d_silhouette.png" width="400" />
+
+* **Structure from Motion (SfM)**
+    * Aus vielen Bildern (z. B. Video von Drohne) wird:
+        * Kamera-Position geschätzt
+        * 3D-Struktur rekonstruiert
+    * Funktioniert mit unbekannter Kameraposition
+    * Beispiel: Gelände-Topografie aus Flugvideo
+    * Bessere Ergebnisse als Silhouette Reconstruction möglich, wegen nicht senkrechter Sicht  
+    * Skalierung bleibt oft unklar, kann aber mit GPS verbessert werden
+
+> **Fazit:** Mit einzelnen monokularen Bildern kann man Tiefe nur approximieren, mit mehreren Bildern kann man echte 3D-Tiefe rekonstruieren.
+
+---
+
+**5.2 Nennen Sie Anwendungsgebiete der 3D Rekonstruktion. Geben Sie eine Definition für "3D Rekonstruktion" in eigenen Worten. Erläutern Sie, warum in 2D Bildern die Größe von Objekten nicht ableitbar ist**
+
+**3D Rekonstruktion:** bezeichnet das Verfahren, bei dem aus Objekten oder Szenen aus 2D-Bildern, Videos oder anderen Sensordaten ein 3D-Modelle erstellt wird
+
+**Anwendungsgebiete:**
+- Medizin & Industrie
+    - Diagnostik durch CT/MRT
+    - 3D Modelle von Organen
+- 3D printing, 3D modelling
+- Bewegungserfassung
+- AR/VR
+- Robotik & Navigation
+    - Pfadplanung 
+    - Lokalisierung 
+- ...
+
+**Warum kann man aus einem 2D-Bild die Objektgröße nicht direkt ableiten?**
+- In 2D-Bildern werden 3D-Szenen perspektivisch auf 2D-Fläche projiziert
+- Dabei geht Tiefeninformation (in Z-Richtung) verloren
+- Ohne zusätzliche Informationen (z. B. Kameraparameter, Referenzobjekte, ...) ist die reale Größe nicht berechenbar
+
+---
+
+**5.3 Führen Sie die Größenbestimmung in Bildern via Referenzobjekte aus. Erläutern Sie Shape from Shading.**
+(Wiederholung von Teilen aus 5.1)
+
+* **Größenbestimmung via Referenzobjekte - Size from orthogonal marker**
+    * Maßstabsschätzung durch bekannte Objekte (z.B. Lineal, Checkerboard)
+    * Wichtig für Kamera-Kalibrierung, forensische Anwendungen
+
+* **Shape from shading (SfS)**
+    * Physikalisches Modell hinsichtlich Lichtrichtung, Ansichtsrichtung und Oberflächeneigenschaften
+    * Schätzung der Oberflächentiefe aus Helligkeitsverläufen
+    * Nutzt verschiedene Reflektionsmodelle (z.B. Phong) -> kann reverse-engineered werden mit CGI
+    * Ungefähre Annäherung der Gradienten / Topographie, aber keine absoluten Distanzen 
+
+---
+
+**5.4 Erläutern Sie Deep Depth from Focus. Erläutern Sie Shape from texture / structured light**
+(Wiederholung von Teilen aus 5.1)
+
+* **[Deep] Depth from Focus (DFF, DDFF)**
+    * Idee: Objekte, die weiter weg sind, erscheinen unscharf auf dem Bild -> Tiefe aus der Bildschärfe
+    * Funktioniert mit Fokus-Stapel -> mehrere Bilder mit verschiedenen Schärfeebenen
+    * Schwierig erreichbar bei modernen Geräten (auto-focus mus deaktiviert werden)
+    * Ergebnisse sind beeinflusst von Textur und Schatten
+
+* **Shape from Texture: Structured Light**
+    * Idee: Wenn eine regelmäßige Textur perspektivisch verzerrt ist, kann daraus Tiefe geschätzt werden.
+    * Structured Light: Projektor + 2 Kameras + codiertes Lichtmuster
+    * Probleme bei Okklusionen, daher hierarchische Rekonstruktion nötig
+    * Alternative: Tiem of Flight (ToF)
+
+---
+
+**5.5 Führen Sie über den Einsatz von Deep Learning zur Bestimmung der Tiefe / 3D Form aus.**
+(Wiederholung von Teilen aus 5.1)
+
+* **Deep Learning**
+    * Netzwerke schätzen relative Tiefe aus Bildinhalten
+    * Nutzung von CNNs (z.B. U-Net), trainiert auf CGI-Daten
+    * 2D–3D-Rekonstruktion über morphbare Modelle (z.B. Gesicht, Haare)
+
+---
+
+**5.6 Erläutern Sie Stereo Matching und Structure from Motion. Welche Bilder sind dafür gut geeignet? Erläutern Sie die Silhouette Reconstruction.**
+(teilweise Wiederholung von Teilen aus 5.1)
+
+* **Stereo Matching**
+    * Zwei nahe aneinanderliegende Kameras mit bekannter Distanz sind auf die selbe Szene gerichtet -> basierend auf dem Prinzip der menschlichen binokularen Tiefenwahrnehmung 
+    * Disparitätskarte durch horizontale Verschiebung der Bildpunkte
+    * Tiefe über Parallaxeneffekt (Verschiebung der Position eines Objekts, wenn es aus verschiedenen Blickwinkeln betrachtet wird)
+    * Ungeeignete Bilder: 
+        * Texturarme/einfarbige Bereiche
+    * Geeignete Bilder: 
+        * Strukturreiche Szenen mit ausreichender Textur
+        * Gleichmäßige Beleuchtung
+        * Statische Szenen ohne Bewegung
+
+* **Structure from Motion (SfM)**
+    * Aus vielen Bildern (z. B. Video von Drohne) wird:
+        * Kamera-Position geschätzt
+        * 3D-Struktur rekonstruiert
+    * Funktioniert mit unbekannter Kameraposition
+    * Beispiel: Gelände-Topografie aus Flugvideo
+    * Bessere Ergebnisse als Silhouette Reconstruction möglich, wegen nicht senkrechter Sicht  
+    * Skalierung bleibt oft unklar, kann aber mit GPS verbessert werden
+    * Geeignete Bilder: 
+        * Verschiedenene Blickwinkeln
+        * Nicht-orthogonale Ansichten für bessere Rekonstruktionsqualität
+        * Überlappende Bildsequenzen
+        * Strukturreiche Szenen
+        * Gleichmäßige Beleuchtung
+
+* **Bekannte Kameraposition - Silhouette Reconstruction**
+    * Nutzung mehrerer Segmentierungsbilder (Silhouetten) zur Rekonstruktion der Visual Hull
+    * Erfordert keine Punktkorrespondenz - nur binäre Segmentierungsmasken
+    * Beispiel: Körpermodell aus 8 Kameraansichten (alle 45°), Person rotiert
+    * Ergebnis: grob konvexe Form, konkave Teile nicht erfasst
 
 ---
 ## 6. Computer Vision and Machine Learning [9]
