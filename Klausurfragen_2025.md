@@ -163,6 +163,7 @@ Algorithmus-Ablauf in Prosa:
     3. **Bildupdate**: Jeder Pixelwert wird um den gewichteten Durchschnitt aller 8 Richtungen ergänzt
 3. Ergebnis: Geglättetes Bild mit erhaltenen Kanten.
 
+---
 
 **3.2 Was bedeutet „image degradation“. Filterung im Ortsraum vs. Frequenzraum. Sehen Frequenz-Spektren von natürlichen Bildern ähnlich aus? Wie kann man das nun zur Beseitigung von Störsignalen nützen? Warum muss bei der „deconvolution“ im Falle von Rauschen der hohe Frequenzbereich abgeschwächt werden (Skizze).**
 
@@ -200,9 +201,31 @@ Die oben genannten Erkenntnisse kann man zur Beseitigung von Störsignalen nutze
 - Wiener-Filter für rauschbehaftete Bilder
 - Richardson-Lucy Dekonvolution für iterative Verbesserung
 
-*Warum muss bei der „deconvolution“ im Falle von Rauschen der hohe Frequenzbereich abgeschwächt werden (Skizze).*
+Warum muss bei der „deconvolution“ im Falle von Rauschen der hohe Frequenzbereich abgeschwächt werden (Skizze).
 
-TODO: Beantworten und ImageJ-Screenshot adden
+$F̂(u,v) = G(u,v)/H(u,v)$
+Mathematische Ursache:
+
+- Degradationsfunktionen $H(u,v)$ haben Tiefpass-Charakter
+- $H(u,v)$ wird bei hohen Frequenzen sehr klein oder null
+- Division durch sehr kleine Werte verstärkt das Rauschen extrem
+- $N(u,v)$ ist das additive Rauschspektrum
+
+<img src="./img/high_frequency_problem.png" width="600" />
+
+- X-Achse ist die Frequenz ($H(u,v)$ hat Tiefpass-Charakter)
+- Y-Achse ist Amplitude/Verstärkungsfaktor
+- Grün ist das Rauschen
+- Die blaue Linie kennzeichnet das Einführen einer Dämpfungsfunktion,
+z.Bsp. Butterworth Dampening
+
+Praktische Konsequenz:
+Ohne Abschwächung wird das rekonstruierte Bild völlig verrauscht, da das Rauschen bei hohen Frequenzen extrem verstärkt wird. 
+
+
+
+
+---
 
 **3.3 Die Wiener-Deconvolution kann mittels Wiener-Filterkern erfolgen, wobei K welche Bedeutung zukommt? ( Abschätzung des Signal-Rausch-Verhältnis). Wie kommt man zu K? Wie vereinfacht sich die Wiener-Deconvolution, wenn kein Rauschen im Bild vorhanden ist.**
 
@@ -223,6 +246,7 @@ $F'$ ... Rekonstruiertes Bild (im Frequenzbereich)
 $H$ ... Degradationskernel (im Frequenzbereich)
 $F$ ...​ Ursprüngliches Bild (im Frequenzbereich)
 
+---
 
 **3.4 Muss bei der Richardson-Lucy-Deconvolution der Faltungskernel bekannt sein, der das Störsignal verursacht? Erläutern Sie in eigenen Konzepten grob, wie mittels RLD ein verzerrtes Bild wieder rekonstruiert werden kann.**
 
@@ -245,6 +269,8 @@ Grundprinzip:
 Daher ist das rechtzeitige Stoppen bei Konvergenz entscheidend für optimale Ergebnisse, da bei Über-Iterierung Artefakte entstehen können und somit die Ergebnisqualität leidet.
 
 FunFact: Die RLD ist besonders effektiv bei Anwendungen wo die PSF gut charakterisiert werden kann, z.Bsp. Astronomie.
+
+---
 
 **3.5 Was bedeutet Image Superresolution? Nennen Sie unterschiedliche Strategien und erläutern Sie das Grundprinzip sehr vereinfacht mit eigenen Worten. Wo liegen die Grenzen der Image Superresolution?**
 
