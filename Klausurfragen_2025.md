@@ -126,16 +126,158 @@ Computer Vision ist eine Erweiterung der Bildverarbeitung, die sich mit der komp
 ---
 ## 3. Image Restauration [5]
 
-3.1 Erläutern Sie die Idee der Anisotropen Diffusion mit eigenen Worten. Was bedeutet die lokale Diffusionszahl ? Was bedeutet K? Wird c für jedes Pixel individuell berechnet?  Wird K für jedes Pixel individuell berechnet?  Wie viele Gradientenrichtungen sind für jedes Pixel zu betrachten?
+**3.1 Erläutern Sie die Idee der Anisotropen Diffusion mit eigenen Worten. Was bedeutet die lokale Diffusionszahl ? Was bedeutet K? Wird c für jedes Pixel individuell berechnet?  Wird K für jedes Pixel individuell berechnet?  Wie viele Gradientenrichtungen sind für jedes Pixel zu betrachten?**
 
-3.2 Was bedeutet „image degradation“. Filterung im Ortsraum vs. Frequenzraum. Sehen Frequenz-Spektren von natürlichen Bildern ähnlich aus? Wie kann man das nun zur Beseitigung von Störsignalen nützen? Warum muss bei der „deconvolution“ im Falle von Rauschen der hohe Frequenzbereich abgeschwächt werden (Skizze).
+Anisotrope Diffusion ist ein iteratives Verfahren zur Bildrestauration, das auf einem physikalischen Modell basiert. Die Grundidee ist, dass Pixel wie Partikel behandelt werden, die ihre Intensitätswerte über die Zeit austauschen - ähnlich wie bei der Wärmediffusion.
 
-3.3 Die Wiener-Deconvolution kann mittels Wiener-Filterkern erfolgen, wobei K welche Bedeutung zukommt? ( Abschätzung des Signal-Rausch-Verhältnis). Wie kommt man zu K? Wie vereinfacht sich die Wiener-Deconvolution, wenn kein Rauschen im Bild vorhanden ist.
+>Entscheidend ist jedoch, dass dieser Austausch **nicht** gleichmäßig in alle Richtungen erfolgt (daher "anisotrop"), sondern durch Kanten und Gradienten im Bild gehemmt wird.
 
-3.4 Muss bei der Richardson-Lucy-Deconvolution der Faltungskernel bekannt sein, der das Störsignal verursacht? Erläutern Sie in eigenen Konzepten grob, wie mittels RLD ein verzerrtes Bild wieder rekonstruiert werden kann.
+Das Ziel ist es, homogene Bildbereiche zu glätten (Rauschreduktion), während wichtige Strukturen wie Kanten erhalten bleiben.
 
-3.5 Was bedeutet Image Superresolution? Nennen Sie unterschiedliche Strategien und erläutern Sie das Grundprinzip sehr vereinfacht mit eigenen Worten. Wo liegen die Grenzen der Image Superresolution?
+Die lokale Diffusionszahl $c(x,y)$ steuert, wie stark die Diffusion an jedem Bildpunkt stattfindet:
 
+- $c = 1$: Ungehemmte isotrope Diffusion (wie bei einem normalem Tiefpass-Filter)
+- $c < 1$: Reduzierte Diffusion an Kanten und Gradienten
+
+Die Konstante $K$ ist ein globaler Parameter, der die Empfindlichkeit des Filters steuert:
+
+- $K$ bestimmt den Schwellwert, ab welcher Gradientenstärke die Diffusion gehemmt wird
+- Kleine $K$-Werte: Bereits schwache Gradienten hemmen die Diffusion → starke Kantenerhaltung
+- Große $K$-Werte: Nur starke Gradienten hemmen die Diffusion → mehr Glättung
+
+Individuelle Berechnung pro Pixel:
+
+- $c(x,y)$ wird für **jedes** Pixel individuell berechnet, basierend auf dem lokalen Gradienten an dieser Position
+- $K$ wird **nicht** für jedes Pixel individuell berechnet - es ist ein globaler Parameter, der für das gesamte Bild konstant bleibt
+
+Anzahl der Gradientenrichtungen:
+
+- 4 Hauptrichtungen: Nord, Süd, Ost, West (Distanz = $1$)
+- 4 Diagonalrichtungen: Nordost, Nordwest, Südost, Südwest (Distanz = $\sqrt{2}$)
+
+Algorithmus-Ablauf in Prosa:
+
+1. Filterkernel für 8 Richtungen (Nord, Nordwest, etc.) werden definiert
+2. Hauptschleife (für jede Iteration):
+    1. **Gradientenberechnung**: Das Bild wird mit allen 8 Richtungskerneln gefaltet → 8 Gradientenbilder
+    2. **Diffusionskoeffizienten**: Für jedes Pixel und jede Richtung wird $c = e^{-(gradient/K)²}$ berechnet
+    3. **Bildupdate**: Jeder Pixelwert wird um den gewichteten Durchschnitt aller 8 Richtungen ergänzt
+3. Ergebnis: Geglättetes Bild mit erhaltenen Kanten.
+
+
+**3.2 Was bedeutet „image degradation“. Filterung im Ortsraum vs. Frequenzraum. Sehen Frequenz-Spektren von natürlichen Bildern ähnlich aus? Wie kann man das nun zur Beseitigung von Störsignalen nützen? Warum muss bei der „deconvolution“ im Falle von Rauschen der hohe Frequenzbereich abgeschwächt werden (Skizze).**
+
+Image degradation bezeichnet die Verschlechterung der Bildqualität durch verschiedene Faktoren:
+- Motion blur (Bewegungsunschärfe)
+- Optische Unschärfe durch Linsen
+- Niedrige Auflösung
+- Räumliche Quantisierung (diskrete Pixel, Partial Volume Effect)
+- Additives Rauschen verschiedener Art
+
+Die mathematische Modellierung ist simpel: $g(x,y) = f(x,y) * h(x,y) + n(x,y)$
+$f$ ... ursprüngliches Bild
+$h$ ... Degradationskernel
+$n$ ... Rauschen
+$g$ ... degradiertes Bild
+
+Filterung im Ortsraum vs. Frequenzraum:
+
+- Ortsraum (Spatial Domain):
+    - Degradation durch Faltung mit einem Kernel: $g(x,y) = f(x,y) * h(x,y)$
+    - Direkte Pixelmanipulation
+- Frequenzraum (Frequency Domain):
+    - Faltung im Ortsraum entspricht Multiplikation im Frequenzraum: $G(u,v) = F(u,v) \cdot H(u,v)$
+    - Transformation via FFT erforderlich und wieder zurück mit IFFT
+
+Natürliche Bilder zeigen ähnliche Spektren im Frequenzbereich
+- Hohe Amplituden bei niedrigen Frequenzen
+- Niedrige Amplituden bei hohen Frequenzen
+- Diese Eigenschaft kann zur Approximation der Degradationsmodelle genutzt werden
+
+Die oben genannten Erkenntnisse kann man zur Beseitigung von Störsignalen nutzen:
+
+- Modellierung der Degradation durch bekannte Kernel (z.B. Gauss für optische Unschärfe, Sinc für Motion Blur)
+- Dekonvolution zur Wiederherstellung: $F̂(u,v) = G(u,v)/H(u,v)$
+- Wiener-Filter für rauschbehaftete Bilder
+- Richardson-Lucy Dekonvolution für iterative Verbesserung
+
+*Warum muss bei der „deconvolution“ im Falle von Rauschen der hohe Frequenzbereich abgeschwächt werden (Skizze).*
+
+TODO: Beantworten und ImageJ-Screenshot adden
+
+**3.3 Die Wiener-Deconvolution kann mittels Wiener-Filterkern erfolgen, wobei K welche Bedeutung zukommt? ( Abschätzung des Signal-Rausch-Verhältnis). Wie kommt man zu K? Wie vereinfacht sich die Wiener-Deconvolution, wenn kein Rauschen im Bild vorhanden ist.**
+
+$K$ repräsentiert eine **empirische** Konstante zur Abschätzung des Signal-Rausch-Verhältnisses. 
+
+$K$ ermittelt man durch:
+- Empirische Schätzung: $K$ wird durch Erfahrungswerte und Experimente geschätzt
+- A-priori Spezifikation: Der Wert muss vorab festgelegt werden basierend auf:
+    - Erwarteter Rauschstärke im Bild
+    - Charakteristika des Signals
+    - Empirischen Tests mit ähnlichen Bilddaten
+
+Wenn **kein** Rauschen im Bild vorhanden ist, gilt K → 0, und die Wiener-Deconvolution vereinfacht sich zur gewöhnlichen inversen Filterung.
+
+$F`(u,v)=\frac{H(u,v)}{F(u,v)}$
+
+$F'$ ... Rekonstruiertes Bild (im Frequenzbereich)
+$H$ ... Degradationskernel (im Frequenzbereich)
+$F$ ...​ Ursprüngliches Bild (im Frequenzbereich)
+
+
+**3.4 Muss bei der Richardson-Lucy-Deconvolution der Faltungskernel bekannt sein, der das Störsignal verursacht? Erläutern Sie in eigenen Konzepten grob, wie mittels RLD ein verzerrtes Bild wieder rekonstruiert werden kann.**
+
+Der Faltungskernel (PSF - Point Spread Function) $h$ muss bei der Richardson-Lucy-Deconvolution bekannt sein.
+
+Die RLD rekonstruiert verzerrte Bilder durch einen iterativen Maximum-Likelihood-Algorithmus:
+
+Grundprinzip:
+
+- **Ausgangspunkt**: Das verzerrte Bild $g$ und der bekannte PSF-Kernel $h$
+- **Ziel**: Rekonstruktion des ursprünglichen Bildes $f$ aus der Beziehung $g = f * h$
+
+1. Startwert: Erste Schätzung $g^0$ (z.B. das beobachtete Bild oder ein Bild mit durchschnittlichem Grauwert (z.Bsp.: $127$))
+2. Iteration:
+    - Berechnung eines Zwischenbildes $c^t$ durch Faltung der aktuellen Schätzung mit dem PSF: $c^t = h * g^t$
+    - Pixelweise Berechnung von Korrekturkoeffizienten durch Vergleich mit dem beobachteten Bild: $m^{t(i,j)} = f(i,j)/c^{t(i,j)}$
+    - Aktualisierung der Schätzung: $g^{(t+1)} = g^t · (m^t * h)$, wobei die Korrekturkoeffizienten mit dem PSF gefaltet werden
+3. Abbruch: Der Algorithmus stoppt bei Konvergenz zu einer stabilen Lösung d.h. wenn sich die Korrekturkoeffizienten dem Wer 1.0 nähern
+
+Daher ist das rechtzeitige Stoppen bei Konvergenz entscheidend für optimale Ergebnisse, da bei Über-Iterierung Artefakte entstehen können und somit die Ergebnisqualität leidet.
+
+FunFact: Die RLD ist besonders effektiv bei Anwendungen wo die PSF gut charakterisiert werden kann, z.Bsp. Astronomie.
+
+**3.5 Was bedeutet Image Superresolution? Nennen Sie unterschiedliche Strategien und erläutern Sie das Grundprinzip sehr vereinfacht mit eigenen Worten. Wo liegen die Grenzen der Image Superresolution?**
+
+Image Superresolution bezeichnet Verfahren zur Erhöhung der Auflösung von Bildern - das heißt, aus einem niedrig aufgelösten Bild wird ein höher aufgelöstes Bild erzeugt, das mehr Details und schärfere Strukturen enthält.
+
+Zwei Hauptkategorien:
+
+- Klassische Computer Vision Ansätze:
+    - Bi-kubische Interpolation: Einfache mathematische Vergrößerung
+    - MAP (Maximum A-Posteriori): Kombination mehrerer leicht versetzter Bilder einer Szene
+    - Bayes-Inferenz: Statistische Rekonstruktionsverfahren
+    - SRCNN (Super-Resolution Convolutional Neural Network)
+    - FSRCNN (Fast Super-Resolution CNN)
+    - SRGAN (Super-Resolution Generative Adversarial Network)
+    - RCAN (Residual Channel Attention Network)
+
+Grundprinzip **sehr** vereinfacht erklärt:
+
+- Klassische Ansätze: Nutzen mathematische Interpolation oder kombinieren mehrere Bilder derselben Szene aus leicht unterschiedlichen Blickwinkeln, um fehlende Pixelinformationen zu "erraten".
+
+- Deep Learning Ansätze: Neuronale Netze werden mit tausenden von Bildpaaren (niedrig-/hochaufgelöst) trainiert und lernen dabei, typische Muster und Strukturen zu erkennen. Bei neuen Bildern können sie dann "intelligente Vermutungen" über fehlende Details anstellen.
+
+
+Grenzen der Image Superresolution:
+
+- Informationsgrenzen: Man kann keine Informationen erzeugen, die ursprünglich nicht vorhanden waren - nur intelligente Schätzungen basierend auf gelernten Mustern
+- Anwendungsabhängigkeit: Erfolg hängt stark vom Bildinhalt ab (Text, Gesichter, unbekannte Objekte)
+- Qualitätsverschlechterung: Bei zu vielen Iterationen oder zu hohen Vergrößerungsfaktoren können Artefakte entstehen
+- Training-Bias: Deep Learning Modelle funktionieren am besten bei Bildinhalten, die ihren Trainingsdaten ähneln
+- Physikalische Grenzen: Das Nyquist-Shannon-Abtasttheorem setzt fundamentale Grenzen für die rekonstruierbare Information
+
+> Das Nyquist-Shannon-Abtasttheorem besagt, dass man ein Signal nur dann vollständig rekonstruieren kann, wenn man es mit mindestens der doppelten Frequenz seiner höchsten enthaltenen Frequenzkomponente abtastet - das heißt, wenn wichtige Details im ursprünglichen Bild zu fein waren und nicht erfasst wurden, können sie auch nicht mehr rekonstruiert werden.
 
 ---
 ## 4. Localization [10]
