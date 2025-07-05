@@ -17,7 +17,7 @@ Das Ziel bei der Lösung eines überbestimmten Gleichungssystems ist es, den Ges
 2.  **Umwandlung in die Gaußsche Normalgleichung:** Um eine lösbare Form zu erhalten, multipliziert man beide Seiten der Gleichung Ax = B von links mit der Transponierten der Matrix A (Aᵀ). Dies führt zur Gaußschen Normalgleichung: **AᵀAx = Aᵀb**.
 3.  **Lösung:** Die Gaußsche Normalgleichung kann dann durch verschiedene Methoden gelöst werden, unter anderem durch eine Erweiterung des **„Falk-Schemas“ der Matrixmultiplikation**. Die Lösung für x ergibt sich dann durch Multiplikation mit der Inversen von (AᵀA): **x = (AᵀA)⁻¹ * (Aᵀb)**.
 
-TODO: Kontretes Beispiel
+<img src="./img/gleichungssystem.png" width="600" />
 
 **Vorteile:**
 
@@ -26,7 +26,6 @@ TODO: Kontretes Beispiel
 **Nachteile:**
 
 * Ungenauigkeiten durch Gleitkommazahl-Arithmetik
-* Beschränkung der Lösungseigenschaften
 
 ---
 
