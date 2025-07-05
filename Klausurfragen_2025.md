@@ -499,29 +499,178 @@ Nachteile von simulierten Bilddaten
 **6.4 Führen Sie detailliert über Datenaugmentierung sowie Tools zur semi-automatischen Annotation von Bildern aus.**
 
 Datenaugmentierung ist eine Methode, um vorhandene Bilddaten künstlich zu erweitern, indem Variationen der Originalbilder erzeugt werden. Ziel ist es, die Datenmenge zu erhöhen und gleichzeitig die Robustheit von Modellen gegen unterschiedliche Bildvariationen zu verbessern.
-* Methoden: Spiegeln, Drehen, Skalieren, Farb- und Kontraständerungen, Rauschen hinzufügen, Zufallsausschnitte.
 
-Semi-automatisch bedeutet:
+Methoden: Spiegeln, Drehen, Skalieren, Farb- und Kontraständerungen, Rauschen hinzufügen, Zufallsausschnitte.
+
+<img src="./img/data_augmentation.png" width="600" />
+
+Semi-automatische Annotation:
 Der Computer schlägt automatische Annotationen vor, die der Mensch dann korrigiert oder bestätigt.
-* Tools: Polygon- oder Bounding-Box-Annotation (LabelMe, LabelImg), Superpixel-Segmentierung, Deep-Learning-Modelle für Vorschläge (Mask R-CNN, CVAT).
+
+Tools: Polygon- oder Bounding-Box-Annotation (LabelMe, LabelImg), Superpixel-Segmentierung, Deep-Learning-Modelle für Vorschläge (Mask R-CNN, CVAT).
 
 ---
 
-**6.5 Was ist ein U-NET? Wie würden Sie dabei den Datenfluss mit RNNs bzw. LSTM vergleichen? Welche Vorverarbeitungsschritte sind notwendig, bevor das Eingangssignal (z.B. Bild) dem Input-Layer übergeben werden kann? Welche Auswirkung hat die Wahl der Vorverarbeitung auf das trainierte CNN?**
+**6.5 Was ist ein U-NET?**
+
+Ein U-Net ist ein Convolutional Neural Network (CNN) speziell für präzise Bildsegmentierung (z.B. in Medizin).
+
+- Es basiert auf einem Encoder-Decoder-Prinzip:
+    - Downsampling-Pfad (Encoder): extrahiert Merkmale durch Faltung (Convolution).
+    - Upsampling-Pfad (Decoder): rekonstruiert Bildauflösung zur präzisen Segmentierung.
+- Über Skip-Connections werden Feature Maps derselben Auflösung direkt verbunden -> ermöglicht präzise Lokalisierung bei gleichzeitigem semantischem Verständnis.
+- Das Modell gibt meist eine Wahrscheinlichkeitskarte aus -> binäre Schwelle für endgültiges Segmentierungsergebnis notwendig.
+
+<p float="center">
+    <img src="./img/u-net.png" width="300" />
+    <img src="./img/u-net_2.png" width="250" />
+</p>
+<img src="./img/u-net_3.png" width="550" />
+
+**Wie würden Sie dabei den Datenfluss mit RNNs bzw. LSTM vergleichen?**
+
+- U-Net: Intra-sample Verbindungen -> verarbeitet räumliche Information innerhalb eines Bildes.
+- RNNs/LSTMs: Inter-sample Verbindungen -> verarbeiten zeitliche Abhängigkeiten über mehrere Datenpunkte hinweg (z. B. bei Videos oder Sequenzen).
+- Während U-Nets "horizontal" im Bild lernen, lernen LSTMs "vertikal" über Zeit oder Sequenzen hinweg.
 
 
+**Welche Vorverarbeitungsschritte sind notwendig, bevor das Eingangssignal (z.B. Bild) dem Input-Layer übergeben werden kann?**
 
-**6.6 Nennen Sie Anwendungsgebiete für Deep Learning. Differenzieren Sie dabei zwischen Klassifikation und Segmentierung – was sind die Auswirkungen auf die Netzwerkarchitektur (input/output Layer)? Was ist die Schwierigkeit bei der Verarbeitung von Eingangsdaten dynamischer Größe?**
+1. BLOB-Conversion:
+- Alle Bilder müssen gleiche Größe, Farbtiefe und Wertebereich (z. B. 8-bit, 0–255) haben.
+- Die Wahl der Interpolationsmethode beim Resizing (z. B. bilinear vs. nearest) hat Einfluss auf Ergebnisqualität.
 
+2. Mean-Subtraction:
+- Durchschnittswert des Bildes oder der Trainingsmenge wird abgezogen.
+- Ziel: Farb- und Beleuchtungsunterschiede ausgleichen.
+- Optional: Standardabweichungsskalierung zur Normalisierung über Kanäle hinweg.
 
+3. Image Whitening (Zero Component Analysis):
+- Zentriert die Daten (Mittelwert = 0),
+- macht sie unkorreliert (durch Rotation),
+- skaliert sie (durch Eigenwert-Normalisierung).
+- Ziel: Reduktion von Redundanz und Korrelation in den Inputdaten, was das Lernen stabiler macht.
+
+**Welche Auswirkung hat die Wahl der Vorverarbeitung auf das trainierte CNN?**
+- Essentiell für die Trainingsqualität:
+    - Falsche Vorverarbeitung -> schlechte Ergebnisse trotz guter Architektur.
+- Gute Vorverarbeitung führt zu:
+    - robusteren Modellen,
+    - besserer Generalisation,
+    - schnellerer und stabilerer Konvergenz.
+- Spezielle Vorverarbeitung (z. B. Augmentation) kann Domänenwissen (z. B. Schnee im Wald) einfließen lassen.
+
+---
+
+**6.6 Nennen Sie Anwendungsgebiete für Deep Learning.**
+
+* Allgemeine Computer Vision-Aufgaben:
+    * Pose- und Aktivitätserkennung
+    * Bildklassifikation, Segmentierung und Objekterkennung
+* Spezifische Erkennungsaufgaben:
+    * Gesichtserkennung und Emotionsklassifikation
+    * Formbasierte Detektion/Klassifikation (z.B. für abstrakte Formen)
+    * Personen-Detektion & -Tracking
+    * Erkennung von Objekten im Kontext des autonomen Fahrens (z.B. Autos, Fahrzeuge)
+    * Texterkennung (OCR)
+    * Spracherkennung und natürliche Sprachverarbeitung
+    * Human 3D Pose Estimation, Roboterwahrnehmung und Viewpoint Estimation unter Verwendung von 3D-Modellen
+    * Klassifikation von Meta-Merkmalen wie der Anzahl von "Inseln" in Bildern
+* Synthese und Generierung von Daten:
+    * Bildsynthese mithilfe von GANs (Generative Adversarial Networks), z.B. für die Erzeugung von Trainingsbildern oder die Synthese von Gesichtern oder medizinischen Datensätzen.
+    * Text-to-Speech-Synthese.
+
+**Differenzieren Sie dabei zwischen Klassifikation und Segmentierung – was sind die Auswirkungen auf die Netzwerkarchitektur (input/output Layer)?**
+
+* **Klassifikation:**
+    * **Ziel:** Einer Eingabe (z.B. einem Bild) ein oder mehrere Labels (Klassen) zuordnen.
+    * **Auswirkungen auf die Netzwerkarchitektur (Output Layer):** Bei der Klassifikation erzeugt die Ausgabeschicht des Convolutional Neural Networks (CNN) typischerweise nur Klassenlabels. Das bedeutet, das Netzwerk gibt eine Wahrscheinlichkeitsverteilung über vordefinierte Klassen aus (z.B. "Katze", "Hund", "Vogel").
+
+* **Segmentierung:**
+    * **Ziel:** Jedem Pixel eines Bildes eine Klasse zuweisen, um so Objekte oder Regionen exakt abzugrenzen.
+    * **Auswirkungen auf die Netzwerkarchitektur (Input/Output Layer):** Für die Segmentierung wird die Bilddaten nach der Größenreduzierung wieder auf die ursprüngliche Auflösung hochskaliert, um eine finale Segmentierungsmaske zu erhalten.
+
+**Was ist die Schwierigkeit bei der Verarbeitung von Eingangsdaten dynamischer Größe?**
+
+Die Verarbeitung von Eingangsdaten dynamischer Größe (d.h., unterschiedlich große Bilder) stellt für viele Deep Learning-Modelle, insbesondere für Convolutional Neural Networks (CNNs), eine Herausforderung dar:
+
+* **Feste Eingabegrößen:** CNNs sind typischerweise für eine spezifische Eingabebildgröße trainiert. Das bedeutet, dass alle Eingabebilder an diese vordefinierte Größe angepasst werden müssen, bevor sie in das Netzwerk eingespeist werden.
+* **Preprocessing (BLOB-Konvertierung):** Der erste Schritt im Preprocessing für CNNs ist die BLOB-Konvertierung, bei der die Größe, die Pixeltiefe und der Skalarbereich aller Eingabebilder angepasst werden.
+    * Die Wahl der Interpolationsstrategie während dieser Größenanpassung kann einen erheblichen Einfluss auf die erzielbare Ausgabequalität haben.
+
+---
 
 **6.7 Erläutern Sie das Prinzip von GANs und deren Einsatzgebiete.**
 
+Generative Adversarial Networks (GANs) sind eine Art von neuronalen Netzen, die sich hervorragend zum Generieren von Daten eignen, wie zum Beispiel künstliche Musik oder künstliche Gemälde, die echten Werken ähneln. Das grundlegende Prinzip von GANs basiert auf einem **adversariellen (gegnerischen) Ansatz**, bei dem zwei neuronale Netzwerke in einem kontinuierlichen Wettstreit miteinander trainiert werden.
 
+Diese beiden Netzwerke sind:
+* Der **Generator**: Dieses Netzwerk hat die Aufgabe, eine sehr große Anzahl von Hypothesen (z.B. neue Bilder) zu generieren.
+* Der **Diskriminator**: Dieses Netzwerk entscheidet, ob der vom Generator erzeugte Inhalt einem gegebenen Trainingsdatensatz ähnelt, d.h., ob er "echt" oder "gefälscht" ist.
+
+<img src="./img/gan.png" width="300" />
+
+**Der Trainingsprozess:**
+
+Der Trainingsprozess ist ein dynamisches Gleichgewicht, bei dem sich beide Netzwerke **kontinuierlich verbessern**:
+* Der **Generator** wird immer besser darin, überzeugendere Daten zu erzeugen, die den "Reality Check" des Diskriminators bestehen können.
+* Der **Diskriminator** wird gleichzeitig immer besser darin, "schlechten" (künstlichen) Inhalt zu erkennen.
+
+Dieser Prozess kann auch mithilfe eines **Multi-Resolution-Ansatzes** trainiert werden, insbesondere da die GAN-Gewichte sehr empfindlich auf Änderungen reagieren. Das Training erfolgt dabei in ansteigender Auflösung, beginnend beispielsweise von 4x4 Pixeln bis zu 128x128 Pixeln und höher.
+
+<img src="./img/gan_mulitres.png" width="300" />
+
+
+**Einsatzgebiete von GANs:**
+
+GANs finden in einer Vielzahl von Anwendungsgebieten Einsatz, insbesondere dort, wo die Synthese und Generierung von Daten im Vordergrund steht:
+* **Bildsynthese**:
+    * GANs können zur **Erzeugung von Trainingsbildern** verwendet werden, was den Bedarf an großen Mengen manuell annotierter Daten reduziert.
+    * Ein prominentes Beispiel ist die **Gesichtssynthese**. Hierbei können GANs auf der Basis von beispielsweise 200.000 unausgerichteten RGB-Bildern von Prominenten trainiert werden, um realistische Gesichter zu generieren.
+    * Die **Synthese medizinischer Datensätze** ist ein weiteres wichtiges Anwendungsgebiet. GANs ermöglichen das Training mit CT-Schnitten zusammen mit zugehörigen Ground-Truth-Segmentierungen. Dies stellt eine ausgezeichnete Alternative dar, wenn nicht genügend Trainingsdaten vorhanden sind.
+* **Text-to-Speech-Synthese**
+
+---
 
 **6.8 Diskutieren Sie die Bedeutung und Anwendungsgebiete von Yolo.**
 
+**YOLO** (You Only Look Once) ist eine Architektur für die **Objektdetektion in Echtzeit**. Es wurde entwickelt, um Objekte in Bildern nicht nur zu klassifizieren, sondern auch deren genaue Position und Größe mittels **Bounding Boxes** zu lokalisieren.
+
+<img src="./img/yolo_1.png" width="200" />
+
+Die Kernidee von YOLO ist, dass ein Eingabebild in ein **Raster unterteilt** wird. Jede Zelle in diesem Raster ist dafür verantwortlich, ein Objekt zu detektieren. Dabei werden für jedes Rasterfeld **Begrenzungsrahmen (Bounding Boxes)** und **Objektklassen-Wahrscheinlichkeiten** erkannt. Die Begrenzungsrahmen werden dann basierend auf ihrer Konfidenz gefiltert.
+
+<img src="./img/yolo_2.png" width="400" />
+
+Anwendungsfälle:
+- Echtzeit Objektdetektion
+- z.B. erkennen von Baumstämmen in einem Bild
+
+---
+
+**6.9 Diskutieren Sie die Bedeutung der Vorverarbeitung, wenn Bilddaten in den Eingangstensor überführt werden.**
+
+* Vorverarbeitung ist Grundlage für plausible, robuste und präzise Ergebnisse.
+* Anpassung an das CNN-Layout: Die gewählte Vorverarbeitungsstrategie muss stark vom Layout des CNNs und der Art und Weise, wie die Regionen von Interesse (ROIs) der Eingabebilder in das Netzwerk eingespeist werden, abhängen.
+* **Standardisierung des Inputs (BLOB-Konvertierung):**
+    * Anpassung von Größe, Pixeltiefe und Skalarbereich aller Eingabebilder.
+    * Die Wahl der Interpolationsstrategie kann die erreichbare Ausgabequalität erheblich beeinflussen.
+* **Farb-/Helligkeitsnormalisierung (Mittelwert-Subtraktion):**
+    * Durch das Subtrahieren des Mittelwerts des Bildes wird eine normierte Skala erreicht.
+    * Dies gleicht Helligkeitsänderungen in den Datensätzen aus.
+    * Zusätzlich kann eine Skalierung durch die Standardabweichung angewendet werden, um gleiche Wertebereiche pro Kanal zu gewährleisten.
+* **Merkmalsverstärkung (Image Whitening):**
+    * Diese Methode, auch Zero Component Analysis genannt, transformiert die Daten so, dass die Kovarianzmatrix der Einheitsmatrix entspricht.
+    * Dazu werden die Daten null-zentriert, entkorreliert (rotiert, bis keine Korrelation mehr besteht) und neu skaliert.
 
 
-**6.9 Diskutieren Sie die Bedeutung der Vorverarbeitung, wenn Bilddaten in den Eingangstensor überführt werden. Was könnte dabei schiefgehen?**
+**Was könnte dabei schiefgehen?**
 
+* **Inadäquate Strategiewahl:** Wenn eine ungeeignete Vorverarbeitungsstrategie gewählt wird, können schwache Ergebnisse die Folge sein.
+* **Falsche Interpolation:** Eine schlechte Wahl der Interpolationsstrategie während der BLOB-Konvertierung kann die Ausgabequalität signifikant beeinträchtigen.
+* **Mangelnde Repräsentativität des Datensatzes:** Auch umfassende Datensätze decken oft nur einen sehr kleinen Teil der realen Welt ab.
+* **Qualität und Korrektheit der Referenzdaten:** Die Qualität und Korrektheit der zugrundeliegenden Referenzdatensätze (Ground Truth) wird selten selbst evaluiert. Dies kann zu Redundanzen, Lücken und Fehlern im Ground Truth führen, die einen Bias einführen.
+* **Herausfordernde Bildmerkmale:** Die Algorithmen können bei Bildern mit geringem Kontrast, Schatten, Blendung, Reflexionen, verwirrenden Texturen und Okklusionen Schwierigkeiten haben.
+* **Bias in Orientierungen oder Inhalten:** Ein Bias hinsichtlich bevorzugter Orientierungen (z.B. Autos immer von der Seite) oder Redundanzen im Inhalt.
+
+---
