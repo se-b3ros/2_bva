@@ -240,10 +240,10 @@ $K$ ermittelt man durch:
 
 Wenn **kein** Rauschen im Bild vorhanden ist, gilt K → 0, und die Wiener-Deconvolution vereinfacht sich zur gewöhnlichen inversen Filterung.
 
-$F`(u,v)=\frac{H(u,v)}{F(u,v)}$
+$F`(u,v)=\frac{F(u,v)}{H'(u,v)}$
 
 $F'$ ... Rekonstruiertes Bild (im Frequenzbereich)
-$H$ ... Degradationskernel (im Frequenzbereich)
+$H'$ ... Geschätzter Degradationskernel (im Frequenzbereich)
 $F$ ...​ Ursprüngliches Bild (im Frequenzbereich)
 
 ---
@@ -264,7 +264,7 @@ Grundprinzip:
     - Berechnung eines Zwischenbildes $c^t$ durch Faltung der aktuellen Schätzung mit dem PSF: $c^t = h * g^t$
     - Pixelweise Berechnung von Korrekturkoeffizienten durch Vergleich mit dem beobachteten Bild: $m^{t(i,j)} = f(i,j)/c^{t(i,j)}$
     - Aktualisierung der Schätzung: $g^{(t+1)} = g^t · (m^t * h)$, wobei die Korrekturkoeffizienten mit dem PSF gefaltet werden
-3. Abbruch: Der Algorithmus stoppt bei Konvergenz zu einer stabilen Lösung d.h. wenn sich die Korrekturkoeffizienten dem Wer 1.0 nähern
+3. Abbruch: Der Algorithmus stoppt bei Konvergenz zu einer stabilen Lösung d.h. wenn sich die Korrekturkoeffizienten dem Wert 1.0 nähern
 
 Daher ist das rechtzeitige Stoppen bei Konvergenz entscheidend für optimale Ergebnisse, da bei Über-Iterierung Artefakte entstehen können und somit die Ergebnisqualität leidet.
 
