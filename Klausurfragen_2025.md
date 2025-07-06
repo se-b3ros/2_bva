@@ -105,21 +105,400 @@ Computer Vision ist eine Erweiterung der Bildverarbeitung, die sich mit der komp
 ---
 ## 2. Segmentation and Classification [8]
 
-2.1 Differenzieren Sie die Begriffe Klassifikation, Segmentierung und Lokalisierung für ein BSP mit 1-N Objekten.
+**2.1 Differenzieren Sie die Begriffe Klassifikation, Segmentierung und Lokalisierung für ein BSP mit 1-N Objekten.**
 
-2.2 Wie kann man mittels MeanShift eine Vorsegmentierung bewirken, wie mittels KMeans Clustering + Quantisierung/Region Labelling, wie mittels Anisotroper Diffusion + Quantisierung/Region Labelling? Vergleichen Sie und erläutern Sie kurz.
+**Klassifikation.**
 
-2.3 Erläutern Sie kurz Graph Cut / Grab Cut. BG und FG-Wurzeln im Graph, Kantengewichte und Schnitt. Wie kann mittels Benutzerinteraktion ein verbessertes Ergebnis bewirkt werden?
+- Definition: Bestimmung der Objektklasse ohne Ortsangabe
+- Beispiel: Das System erkennt nur "CAT" (Katze) im Bild
+- Ausgabe: Klassenbezeichnung (z.B. "Katze", "Hund", "Ente")
+- Anwendung: Bei einem Objekt im Bild
 
-2.4 Diskutieren Sie bei der OCR die technischen Hürden für a) die Erkennung von Text-Passagen und b) für die eigentliche Analyse der Buchstaben. Nennen Sie die dafür jeweils notwendigen verfahren.
+**Klassifikation + Lokalisierung**
 
-2.5 Nennen Sie einige relevante Features aus dem Bereich Textur, Geometrie und Transformation. Welche dieser Features können auch im Bereich OCR zur Analyse von binären Buchstaben innerhalb einer region of interest (ROI) verwendet werden? Inwieweit beinhalten klassische Segmentierungsverfahren wie Interval-Threshold oder Region-Growing ebenfalls Features?
+- Definition: Bestimmung der Objektklasse UND deren Position
+- Beispiel: Das System erkennt "CAT" und umrahmt die Katze mit einem roten Bounding Box
+- Ausgabe: Klassenbezeichnung + Koordinaten der Begrenzungsbox
+- Anwendung: Bei einem Objekt im Bild
 
-2.6 Erläutern Sie das Vorgehen, wenn man OCR „von 0 weg“ eigenständig umsetzen möchte auf Basis von vorsegmentierten Regionen und Featureanalyse für die Klassifikation (vgl. Übung).
+**Object Detection**
 
-2.7 Was sind Haar Cascades? Wie werden sie trainiert und angewandt? Inwieweit ist das Konzept skalierungsinvariant? Führen Sie über die Bedeutung der Haar Cascade im Bereich der
+- Definition: Erkennung und Lokalisierung multipler Objekte
+- Beispiel: Das System erkennt und lokalisiert "CAT, DOG, DUCK" mit verschiedenfarbigen Bounding Boxes
+- Ausgabe: Multiple Klassenbezeichnungen + jeweilige Begrenzungsboxen
+- Anwendung: Bei 1-N Objekten im Bild
 
-2.8. Nennen und Diskutieren Sie alternative Ansätze zur Gesichtserkennung (historische Verfahren bis hin zu aktuellen Strategien) und charakterisieren Sie dabei jeweils die Vor- und Nachteile.
+**Instance Segmentation**
+
+- Definition: Pixelgenaue Segmentierung jeder Objektinstanz
+- Beispiel: Jedes Objekt (Katze, Hund, Ente) wird pixelgenau in unterschiedlichen Farben markiert
+- Ausgabe: Pixelmaske für jede Objektinstanz + Klassenbezeichnung
+- Anwendung: Bei 1-N Objekten mit präziser Formerfassung
+
+<img src="./img/klassifikation.png" width="600" />
+
+_Why tf are they so damn cute?_
+
+Die Komplexität steigt von links nach rechts: Klassifikation → Lokalisierung → Detection → Instance Segmentation.
+
+---
+
+**2.2 Wie kann man mittels MeanShift eine Vorsegmentierung bewirken, wie mittels KMeans Clustering + Quantisierung/Region Labelling, wie mittels Anisotroper Diffusion + Quantisierung/Region Labelling? Vergleichen Sie und erläutern Sie kurz.**
+
+**Mean Shift**
+- Funktionsweise:
+    - Pixels werden als mobile Punkte in einem 3D-RGB-Farbraum interpretiert
+    - Jeder Punkt bewegt sich iterativ zum lokalen Maximum der Kernel Density Estimation (KDE)
+    - Verwendet Gaussian Kernel mit spezifischem Radius zur lokalen Durchschnittsberechnung
+    - Partikel konvergieren zu lokalen Clusterzentren
+- Vorteile:
+    - Parameter-frei (keine Vorab-Clusterzahl erforderlich)
+    - Sehr robust für homogene Farbregionen
+    - Kann direkt aus Histogramm berechnet werden
+- Nachteile:
+    - Rechenintensiv durch iterative Bewegung aller Punkte
+
+**K-Means Clustering + Quantisierung/Region Labelling**
+- Funktionsweise:
+    - Clustering basiert auf Intensitäts-Ähnlichkeit
+    - Iterative Neuberechnung der Clusterzentren (Centroids)
+    - Pixel werden dem nächstgelegenen Centroid zugeordnet
+    - Anschließend Region Labelling für räumlich zusammenhängende Bereiche
+- Vorteile:
+    - Einfach und schnell implementierbar
+    - Gute Ergebnisse bei homogener Beleuchtung
+- Nachteile:
+    - Inhomogene Kontraste und Beleuchtung können zu schlechten Segmentierungen führen
+    - Clusterzahl n muss vorab definiert werden
+    - Region Labelling als zusätzlicher Post-Processing-Schritt erforderlich
+
+<img src="./img/kmeans.png" width="600" />
+
+> Obwohl die Clusteranzahl bei K-Means vorab definiert wird, können nach dem Region Labelling mehr Regionen als Cluster entstehen, da nicht alle Pixel innerhalb eines Clusters örtlich zusammenhängen müssen.
+
+<img src="./img/kmeans_result.png" width="600" />
+
+
+**Anisotrope Diffusion + Quantisierung/Region Labelling**
+- Funktionsweise:
+    - Anisotrope Diffusion _(wird bei 3.1 erklärt)_ mit vielen Iterationen glättet Bereiche innerhalb von Gradientengrenzen
+    - Quantisierung auf ausreichende Granularität (z.B. [0;15])
+    - Region Labelling für zusammenhängende Bereiche
+- Vorteile:
+    - Erhält wichtige Objektgrenzen (Gradientenerhaltung)
+- Nachteile:
+    - Rechenintensiv durch viele Diffusionsiterationen
+    - Mehrere Verarbeitungsschritte erforderlich
+
+<img src="./img/anisotropic_diff.png" width="600" />
+
+
+**Vergleichstabelle:**
+
+| Kriterium | Mean Shift | K-Means | Anisotrope Diffusion |
+|-----------|------------|---------|---------------------|
+| **Parameter** | Parameter-frei | Clusterzahl $n$ erforderlich | Iterationszahl |
+| **Geschwindigkeit** | Langsam | Schnell | Langsam |
+| **Beleuchtungsrobustheit** | Gut | Schlecht | Sehr gut |
+| **Post-Processing** | Nope | Region Labelling | Quantisierung + Region Labelling |
+
+---
+
+**2.3 Erläutern Sie kurz Graph Cut / Grab Cut. BG und FG-Wurzeln im Graph, Kantengewichte und Schnitt. Wie kann mittels Benutzerinteraktion ein verbessertes Ergebnis bewirkt werden?**
+
+Grab Cut ist eine Weiterentwicklung von Graph Cut für die interaktive Vordergrund-/Hintergrund-Segmentierung mit minimaler Benutzerinteraktion.
+
+**Grundprinzip:** 
+
+- Farben von Vordergrund (FG) und Hintergrund (BG) werden als GMM (Gaussian Mixture Model) modelliert
+- Jeder Pixel erhält einen α-Wert in [0;1] für die Zugehörigkeit zu BG (α=0) oder FG (α=1)
+- Das GMM wird iterativ basierend auf den zugewiesenen Pixeln aktualisiert
+
+**Graph-Struktur**
+- BG und FG-Wurzeln:
+    - Source: Verbunden mit garantierten Vordergrund-Pixeln
+    - Sink: Verbunden mit garantierten Hintergrund-Pixeln
+    - Alle Pixel sind als Knoten im Graph repräsentiert
+- Kantengewichte (Energiefunktion kombiniert zwei Komponenten):
+    - $E = E_{color} + E_{coherence}$
+    - $E_{color}$: GMM-basierte Farbähnlichkeit
+    - $E_{coherence}$: Lokale Nachbarschaft und Gradientenseparation
+
+**Schnitt:**
+- Der Graph wird so geschnitten, dass FG- und BG-Regionen getrennt werden
+- Dabei werden Pixel-Verbindungen mit der höchsten "Distanz" (Gradienten, Farbunterschiede) entfernt
+- Das Ergebnis minimiert die Gesamtenergie
+
+**Iterativer Prozess:**
+Das GMM wird iterativ geupdated basierend auf den neu zugewiesenen Pixeln, und der Graph-Schnitt wird neu durchgeführt bis Konvergenz erreicht ist → das Prinzip der "iterative energy minimization".
+
+**Benutzerinteraktion für bessere Ergebnisse**
+
+- Initiale ROI-Definition: Benutzer definiert groben Bereich um das Objekt
+- Seed-Korrektur: Bei unzureichenden Ergebnissen können zusätzliche Seeds gesetzt werden:
+    - FG-Seeds (Wert 255): Markierung sicherer Vordergrund-Bereiche
+    - BG-Seeds (Wert 0): Markierung sicherer Hintergrund-Bereiche
+- Iterative Verbesserung: Diese Seeds dienen als "Ground Truth" und verfeinern das GMM
+
+<img src="./img/grab_cut.png" width="600" />
+
+<img src="./img/grab_cut_sample.png" width="200" />
+
+--- 
+
+**2.4 Diskutieren Sie bei der OCR die technischen Hürden für a) die Erkennung von Text-Passagen und b) für die eigentliche Analyse der Buchstaben. Nennen Sie die dafür jeweils notwendigen verfahren.**
+
+**Technische Hürden bei der Erkennung von Text-Passagen**
+
+- Komplexe Bildanalyse: Text kann in verschiedenen Größen, Positionen und Orientierungen im Bild auftreten
+- Variabilität: Unterschiedliche Schriftarten, Größen und Ausrichtungen erschweren die Detektion
+- Hintergrund-Separation: Trennung von Text und Hintergrund bei komplexen Bildern
+- Scan-Qualität: Verzerrungen, Rauschen und Unschärfe bei gescannten Dokumenten
+
+**dazugehörige Verfahren:**
+
+- EAST (Efficient and Accurate Scene Text Detector)
+    - Nutzt rekurrente neuronale Netzwerke
+    - Erstellt eine Pixel-Score-Map für lokale Zeichen-Wahrscheinlichkeit
+    - Gruppiert wahrscheinliche Zeichen-Pixel zu rechteckigen Bereichen
+
+- Region Labelling Strategien
+    - Identifikation zusammenhängender Textbereiche
+    - Segmentierung in einzelne Textzeilen
+
+- "Fire-through" Methode
+    - Bei nicht überlappenden Zeilen anwendbar
+    - Horizontale/vertikale Projektion zur Zeilentrennung
+
+**Technische Hürden bei der Buchstaben-Analyse**
+
+- Ähnliche Buchstaben: Schwierige Unterscheidung zwischen ähnlichen Zeichen (z.B. "b" und "d")
+- Qualitätsverluste: Sensor-Rauschen, Unschärfe, Beleuchtungsunterschiede
+- Verzerrungen: Affine Transformationen durch schräge Aufnahmen
+- Diskretisierung: Anti-Aliasing-Effekte bei der Digitalisierung
+
+**dazugehörige Verfahren:**
+
+- Merkmals-Extraktion
+    - Geometrische Features: Anzahl Pixel, Breite/Höhe, Zentroid-Abstände
+    - Topologische Features: Anzahl Inseln, Verzweigungspunkte
+    - Korrelationskoeffizient-Berechnung für Ähnlichkeitsvergleich
+
+- Machine Learning Ansätze
+    - SVM (Support Vector Machines)
+    - Neuronale Netzwerke
+    - Deep Learning mit RNNs (besonders LSTM für Kontextanalyse)
+
+- Moderne Deep Learning Architekturen
+    - Convolutional Layers: Für Vorverarbeitung und Feature-Extraktion
+    - Auxiliary Stage: Mehrere Schichten für Vektorverarbeitung
+    - Recurrent Stage: GRU-Layer (ähnlich LSTM) für variable Eingabelängen
+
+- Qualitätsverbesserung
+    - Sprachmodelle: Plausibilitätsprüfung durch bekannte Wörter
+    - Kontext-Analyse: Berücksichtigung vorheriger/nachfolgender Buchstaben
+    - Template-Matching: Bei bekannten Schriftarten
+
+--- 
+
+**2.5 Nennen Sie einige relevante Features aus dem Bereich Textur, Geometrie und Transformation. Welche dieser Features können auch im Bereich OCR zur Analyse von binären Buchstaben innerhalb einer region of interest (ROI) verwendet werden? Inwieweit beinhalten klassische Segmentierungsverfahren wie Interval-Threshold oder Region-Growing ebenfalls Features?**
+
+**Allgemein**
+
+- Textur-Features
+    - LBP (Local Binary Patterns): Lokale Nachbarschaftsanalyse in 3x3 Blöcken
+    - Haar-Features: Verschiedene Konvolutionskerne zur Detektion spezifischer Charakteristika
+- Geometrie-Features
+    - F₁: Anzahl der Pixel
+    - F₂: Ausdehnung in x-Richtung (max. Breite)
+    - F₃: Ausdehnung in y-Richtung (max. Höhe)
+    - F₄: Durchschnittlicher Abstand vom Zentroid
+    - F₅: Minimaler Abstand vom Zentroid
+    - F₆: Maximaler Abstand vom Zentroid
+    - F₇: Zirkularität
+    - F₈: Relative x-Position des Zentroids in der Bounding Box
+    - F₉: Relative y-Position des Zentroids in der Bounding Box
+- Transformation-Features
+    - Affine Transformationen: Rotation, Skalierung, Translation
+    - Delaunay-Triangulation: Bei Gesichtserkennung für invariante Topographie
+
+**Features für OCR-Buchstaben-Analyse**
+
+- Alle oben genannten F₁-F₉
+- Anzahl der Inseln
+- Anzahl der Verzweigungspunkte
+- Mittlere Richtungsänderung
+
+**Features in klassischen Segmentierungsverfahren**
+
+Klassische Segmentierungsverfahren beinhalten Features nur in sehr geringem Umfang:
+- **Interval-Thresholding:**
+    - Nutzt Intensitätswerte als Feature
+    - Segmentiert basierend auf Schwellenwerten (z.B. Grauwert-Histogramm)
+- **Region-Growing:**
+    - Basiert ebenfalls primär auf Intensitätswerten (Tmin, Tmax)
+    - Zusätzlich: räumliche Nachbarschaftsinformation
+    - Implizite geometrische Komponente
+
+--- 
+
+**2.6 Erläutern Sie das Vorgehen, wenn man OCR „von 0 weg“ eigenständig umsetzen möchte auf Basis von vorsegmentierten Regionen und Featureanalyse für die Klassifikation (vgl. Übung).**
+
+1. Bildvorverarbeitung und Binarisierung 
+    - mit Intervall-Thresholding
+2. Textsegmentierung
+    - "Fire-Through" Methode: Horizontale Analyse des gesamten Bildes
+    - Erkennung von Textzeilen durch Detektion von Zeilen mit Vordergrundpixeln
+3. Zeichentrennung
+    - Vertikale "Fire-Through" Technik innerhalb jeder erkannten Zeile
+    - Suche nach leeren Spalten zwischen Zeichen als Trennpunkte
+4. (Optional) Zeichenregion-Optimierung (Region Shrinking)
+    - Anpassung der Bounding Box auf die tatsächlichen Zeichengrenzen
+    - Vorteil: Genauere Feature-Berechnung, bessere Aspekt-Verhältnisse
+5.  Feature-Extraktion
+    - Berechnung von Durchschnittswerten über alle Zeichenregionen
+6.  Referenzzeichen-Auswahl
+    - Feature-Vektor des ausgewählten Zeichens wird als Referenz verwendet
+7. Vergleichsprozess
+    - Vergleich der extrahierten Features mit dem Referenzzeichen
+    - Berechnung des Korrelationskoeffizienten zwischen den Vektoren
+    - Schwellwert-basierte Entscheidung (z.B. 0.999 für hohe Genauigkeit)
+8. Ergebnisvisualisierung
+---
+
+**2.7 Was sind Haar Cascades? Wie werden sie trainiert und angewandt? Inwieweit ist das Konzept skalierungsinvariant? Führen Sie über die Bedeutung der Haar Cascade im Bereich der _??? (Hier hat Gerald ein kleines Schlagerl gehabt)_**
+
+Haar Cascades sind ein mehrstufiges Klassifikationssystem für die Gesichtserkennung. Das System nutzt Haar-ähnliche Features (spezielle Convolution-Kernel) zur Erkennung charakteristischer Gesichtsmerkmale wie Augen, Nase und Mund. Haar-ähnliche Features sind spezielle rechteckige Convolution-Kernel (Filter), die Helligkeitsunterschiede zwischen benachbarten Bildregionen detektieren - beispielsweise dunkle Augenbereiche neben helleren Wangenbereichen oder der dunkle Bereich zwischen den Augen.
+
+**Training von Haar Cascades:**
+Trainingsdaten:
+- Positive Beispiele: Viele Trainingsbilder mit Gesichtern
+- Negative Beispiele: Bilder mit verschiedenen anderen Objekten (ohne Gesichter)
+
+Trainingsverfahren:
+1. Haar Features: Verschiedene Haar-Kernel werden in unterschiedlichen Maßstäben, Orientierungen und Positionen innerhalb der Bild-ROIs angewendet
+2. AdaBoost-Algorithmus: Wird verwendet, um die wichtigsten Features zu identifizieren und eine Cascade-Struktur aufzubauen
+3. Feature-Auswahl: Das System prüft zuerst die signifikantesten Features und evaluiert weitere nur dann, wenn ein Gesicht noch wahrscheinlich ist
+
+**Anwendung**
+
+Sliding Window Ansatz
+- Das gesamte Bild wird in Sub-Image ROIs aufgeteilt (Sliding Windows verschiedener Größen)
+- Filter-Pyramide für verschiedene Skalierungen
+
+Cascade-Verarbeitung
+- Mehrstufige Klassifikation: Nur wenn Features einen vordefinierten Schwellenwert erreichen, wird der Prozess fortgesetzt/verfeinert
+- Effizienzsteigerung: Reduziert den Rechenaufwand erheblich, da nicht alle Features für jeden Bildbereich berechnet werden müssen
+
+Non-Maximum Suppression
+- Mehrere überlappende Gesichtskandidaten werden zu einem finalen Ergebnis zusammengefasst
+
+**Skalierungsinvarianz**
+
+Das Haar Cascade-Konzept ist skalierungsinvariant durch:
+1. Filter-Pyramide: Anwendung der Haar Features in verschiedenen Maßstäben
+2. Multi-Scale Detection: Das System kann Gesichter in unterschiedlichen Größen erkennen
+3. Skalierbare Kernel: Die Haar Features werden in verschiedenen Größen angewendet
+
+**Bedeutung der Haar Cascade**
+
+_(Achtung Antworten nur geschätzt, weil Frage unvollständig -> immer dieser Gerald 🙂‍↔️)_
+
++ Vorteile:
+    - Hohe Genauigkeit und niedrige False-Positive-Rate
+    - Robuste Erkennung unter verschiedenen Bedingungen
+    - Etablierter Standard in der Computer Vision
+
+\- Nachteile:
+    - Langsamer als LBP (local Binary Patterns)
+    - Weniger robust gegen Verdeckungen
+    - Weniger genau bei dunklen Gesichtern
+
+
+> Haar Cascades waren wegweisend für die automatische Gesichtserkennung und bildeten lange Zeit den Goldstandard für Echtzeit-Gesichtsdetektion. Sie sind bis heute in OpenCV implementiert und werden als Referenz für Vergleiche mit modernen Deep Learning-Ansätzen verwendet.
+> Obwohl moderne Deep Learning-Methoden heute bessere Ergebnisse erzielen, bleiben Haar Cascades ein wichtiges Grundlagenkonzept.
+---
+
+**2.8. Nennen und Diskutieren Sie alternative Ansätze zur Gesichtserkennung (historische Verfahren bis hin zu aktuellen Strategien) und charakterisieren Sie dabei jeweils die Vor- und Nachteile.**
+
+**Historische Verfahren**
+1. Geometrische Merkmale (Kanade 1973, Brunelli & Poggio 1992)
+
+Ansatz:
+- 16 Landmarken und 40 Features (Kanade) bzw. 22 Landmarken (Brunelli & Poggio)
+- Berechnung von Winkeln und Seitenverhältnissen zwischen Merkmalen
+- Vergleich über euklidische Distanz
+
+Vorteile:
+- Robust bei variierender Beleuchtung und kleinen Gesichtsausdrucksänderungen
+
+Nachteile:
+- Automatische Landmarken-Detektion schwierig und instabil
+- Nur 75% Erkennungsrate bei 20 Personen
+- Zu wenige Informationen für robuste Diskriminierung
+
+**Traditionelle Computer Vision**
+2. Haar Cascade (Viola & Jones 2001)
+
+Ansatz:
+- Haar-Features verschiedener Größe, Orientierung und Position
+- AdaBoost-Algorithmus mit mehrstufiger Klassifikation (Cascade)
+
+Vorteile:
+- Hohe Erkennungsgenauigkeit
+- Niedrige Falsch-Positiv-Rate
+
+Nachteile:
+- Rechnerisch komplex und langsam
+- Längere Trainingszeit
+- Weniger genau bei dunklen Gesichtern
+- Eingeschränkt bei schwierigen Beleuchtungsbedingungen
+- Weniger robust gegen Verdeckungen
+
+3. Local Binary Patterns (LBP) (Ahonen et al. 2006)
+
+Ansatz:
+- Analyse lokaler 3x3 Pixelblöcke
+- Encoding in Histogramme mit 203-bin Vektor
+
+Vorteile:
+- Rechnerisch einfach und schnell
+- Kürzere Trainingszeit
+- Robust gegenüber lokalen Beleuchtungsänderungen
+- Robust gegen Verdeckungen
+
+Nachteile:
+- Geringere Genauigkeit
+- Höhere Falsch-Positiv-Rate
+
+4. Active Appearance Models (Edwards et al. 1998)
+
+Ansatz:
+- Statistische Form- und Texturmodelle
+- Harmonisierung von Gesichtsausdrücken vor Vergleich
+
+Vorteile:
+- Berücksichtigt verschiedene Gesichtsausdrücke
+- Vergleich von Form und Textur
+
+**Aktuelle Deep Learning Ansätze**
+5. Deep Learning (FaceNet - Schroff et al. 2015)
+
+Ansatz:
+- 22-schichtiges Netzwerk mit 140+ Millionen Parametern
+- 128-dimensionale L2-normalisierte Repräsentation
+- Training mit LFW Dataset (Millionen von Bildern)
+
+Vorteile:
+- 88% Erkennungsrate (Einzelbilder)
+- 95% bei Videosequenzen (erste 100 Frames)
+- Automatische Merkmalsextraktion
+
+Nachteile:
+- Hoher Rechenaufwand
+- Große Trainingsmengen erforderlich
+
+>Entwicklungstrend: Von 75% (Kanade) zu 96-98% Erkennungsrate bei modernen Ansätzen, mit Trend von manuell definierten zu automatisch gelernten Merkmalen.
 
  
 ---
