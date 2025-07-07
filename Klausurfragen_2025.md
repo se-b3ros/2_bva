@@ -83,24 +83,251 @@ Computer Vision ist eine Erweiterung der Bildverarbeitung, die sich mit der komp
 ---
 ## 1.Linear Imaging Systems [9]
 
-1.1 Rotation in 2D: welche zwei Möglichkeiten gibt es hierfür? Fertigen Sie eine Skizze an. 
+**1.1 Rotation in 2D: welche zwei Möglichkeiten gibt es hierfür? Fertigen Sie eine Skizze an.**
 
-1.2: Wie viele Rotationswinkel gibt es in 3D. Wie groß Matrix für Translation, Rotation, Skalierung in 3D. Warum 4x4. Wo kommt fehlende 4-te Koordinate in 3D her? Sind affine Transformationen kommutativ? Zeigen Sie anhand eines 2D Beispiels mit Rot/Trans, dass NICHT kommutativ.
+**Rotation des Punkts im fixen Koordinatensystem**
+- Rotation von Punkt P aktiv um den Ursprung
+- Koordinatensystem bleibt unverändert
+- Neue Position des Punkts P' wird mit der Rotationsmatrix berechnet
+- Rotationsmatrix:
+$$
+R(\alpha) =
+\begin{pmatrix}
+\cos\alpha & -\sin\alpha \\
+\sin\alpha & \cos\alpha
+\end{pmatrix}
+$$
 
-1.3 Intrinsische vs. Extrinsische Rotation, d.h. Objekt- bzw. Koordinatensystem-bezogen. Vgl. Vor und Nachteile. Welche Eigenheit gibt es bei der Überführung von extrinsisch nach intrinsisch (Rot-Reihenfolge dreht sich um)
+- Transformation:
+$$
+P' = R(\alpha) \cdot P
+$$
 
-1.4 Was bedeutet Kamera-Kalibrierung? Wo liegen die Anwendungsgebiete und welche generellen Einschränkungen können Abbildungssystemen anhaften (distortion, keine echten Farben, usw.)
+**Rotation des Koordinatensystems bei fixem Punkt**
+- Statt den Punkt zu drehen, wird das gesamte Koordinatensystem in die verkehrte Richtung (-$\alpha$) rotiert
 
-1.5 Warum kommt es bei der Camera Obscura zu Unschärfe? Fertigen Sie eine Skizze an und diskutieren Sie wovon es abhängt, dass ein Bild mittels Camera Obscura vergrößert oder verkleinert wird. Konnex zu adaptiven Filtern zwecks Korrektur
+**Skizzen im Vergleich:** \
+Beide führen zur gleichen neuen Position relativ zum Koordinatensystem:
 
-1.6 Welche intrinsischen und extrinsischen Parameter als Matrizeninhalte sind bei der Kamera-Kalibrierung zu lösen? Beschreiben Sie jeden der Parameter. Warum gibt es 2 Parameter für die Fokuslänge (x,y)? Durch welche weiteren Parameter kann eine Verzerrungskorrektur erfolgen?
+<img src="./img/linear_2d_rotation.png" width="600" />
 
-1.7 Welche grundlegenden 3 geometrischen Probleme können mittels Kamera Kalibrierung gelöst werden? Erläutern Sie ev. mit Skizze.
+---
+**1.2: Wie viele Rotationswinkel gibt es in 3D.**
+Drei Rotationswinkel, auch drei Rotationsfreiheitsgrade:
+- Rotation um x-Achse (Roll)
+- Rotation um y-Achse (Pitch)
+- Rotation um z-Achse (Yaw)
 
-1.8 Beschreiben Sie den Verfahrensablauf bei der Kalibrierung einer Kamera (Schachbrett-Muster).
+**Wie groß Matrix für Translation, Rotation, Skalierung in 3D. Warum 4x4. Wo kommt fehlende 4-te Koordinate in 3D her?**
+- Translation: braucht 4×4 (nicht mit 3×3 darstellbar!)
+- Rotation: 4×4 (3x3 würde reichen)
+- Skalierung: 4×4 (3x3 würde reichen)
 
-1.9 Erläutern sie grob, wie die Gleichungen zur Kalibrierung einer Kamera definiert und gelöst werden können. Ev. mit Skizze.
+Man braucht 4x4 damit auch Translation als Matrixmultiplikations möglich ist. 4-te Koordinate kommt von der Verwendung von homogenen Koordinaten ($(x,y,z)→(x,y,z,1)$) -> erlaubt, dass alle affine Transformationen mit einer einzigen 4×4-Matrix dargestellt werden können 
 
+<img src="./img/linear_transformation_matrices.png" width="600" />
+
+**Sind affine Transformationen kommutativ? Zeigen Sie anhand eines 2D Beispiels mit Rot/Trans, dass NICHT kommutativ.**
+
+Nein, im Allgemeinen sind sie nicht kommutativ:
+
+<img src="./img/linear_commutative.png" width="600" />
+
+---
+**1.3 Intrinsische vs. Extrinsische Rotation, d.h. Objekt- bzw. Koordinatensystem-bezogen. Vgl. Vor und Nachteile. Welche Eigenheit gibt es bei der Überführung von extrinsisch nach intrinsisch (Rot-Reihenfolge dreht sich um)**
+
+**Intrinsische Rotation:** Das Objekt rotiert um seine eigenen Achsen, die sich bei jeder Rotation mitdrehen
+
+**Extrinsische Rotation:** Das Objekt wird im fixen Weltkoordinatensystem gedreht. Jede Rotation erfolgt um eine globale Achse, die sich nicht mitdreht
+
+**Eigenheit bei der Überführung:** Wenn man von extrinsisch zu intrinsisch (oder umgekehrt) übergeht, muss man die Reihenfolge der Matrixmultiplikationen umkehren.
+
+| Merkmal     | **Extrinsisch**                           | **Intrinsisch**                                 |
+| ----------- | ----------------------------------------- | ----------------------------------------------- |
+| Bezug       | Weltkoordinatensystem (fixe Achsen)       | Objektachsen (rotieren mit)                     |
+| Anwendung   | Kameraausrichtung, Welt-Tracking          | Robotik, Luftfahrt, Gelenk-Animation            |
+| Verständnis | Mathematisch klarer                       | Visuell besser nachvollziehbar                  |
+| Reihenfolge | z → y → x                                 | x → y → z                                       |
+| Nachteil    | nicht intuitiv bei verketteten Rotationen | Achsen ändern sich ständig → komplexere Analyse |
+
+---
+**1.4 Was bedeutet Kamera-Kalibrierung? Wo liegen die Anwendungsgebiete und welche generellen Einschränkungen können Abbildungssystemen anhaften (distortion, keine echten Farben, usw.)**
+
+Kamera-Kalibrierung ist der Prozess, bei dem man die inneren (intrinsischen), äußeren (extrinsischen) Parameter und optional den Verzerrungskoeffizienten einer Kamera bestimmt, um ein mathematisch korrektes Abbildungsmodell zu erhalten.
+
+> intrinsische Parameter = Brennweite und optisches Zentrum \
+> extrinsische Parameter = Rotation und Translation der Kamera zur Welt
+
+**Anwendungsgebiete:**
+- Bildvermessung, Bestimmung der Position von Objekten
+- 3D-Rekonstruktion
+- Tiefenbestimmung
+- Forensik 
+
+**Einschränkungen:**
+- RGB-Sensoren liefern keine spektral echten Farben
+- Bestimmte Tiefe wird fokussiert
+- Fertigungsfehler bei Linsen
+
+---
+**1.5 Warum kommt es bei der Camera Obscura zu Unschärfe? Fertigen Sie eine Skizze an und diskutieren Sie wovon es abhängt, dass ein Bild mittels Camera Obscura vergrößert oder verkleinert wird. Konnex zu adaptiven Filtern zwecks Korrektur**
+- Die Camera Obscura verwendet ein Loch (kein Linsensystem), durch das Licht auf eine Projektionsfläche fällt. Jeder Bildpunkt entsteht durch Lichtstrahlen, die von einem Punkt in der Szene durch das Loch auf der Fläche treffen.
+- Ist das Loch zu groß, gelangen mehrere Lichtstrahlen von leicht unterschiedlichen Richtungen durch das Loch auf denselben Bildpunkt -> **Unschärfe**
+- Größe der Öffnung:
+    - kleiner → schärferes Bild, aber dunkler (weniger Licht)
+    - größer → helleres, aber unschärferes Bild
+
+- Abstand von Objekt und Projektionsfläche:
+    - Größerer Abstand → größere Projektion (Bild wird vergrößert), aber auch potenziell unschärfer
+    - Näher am Loch → kleineres, schärferes Bild
+
+Skizze:
+
+<img src="./img/linear_obscura.png" width="600" />
+
+**Konnex zu adaptiven Filtern zwecks Korrektur:**
+- Unschärfe kann man durch adaptive Filter bereinigen (z.B. Anisotrope Diffusion)
+
+---
+**1.6 Welche intrinsischen und extrinsischen Parameter als Matrizeninhalte sind bei der Kamera-Kalibrierung zu lösen? Beschreiben Sie jeden der Parameter. Warum gibt es 2 Parameter für die Fokuslänge (x,y)? Durch welche weiteren Parameter kann eine Verzerrungskorrektur erfolgen?**
+
+**Instrinsische Parameter**
+$$
+\begin{bmatrix}
+\phi_x & \gamma & \delta_x \\
+0 & \phi_y & \delta_y \\
+0 & 0 & 1
+\end{bmatrix}
+$$
+
+- $\phi_x$ - horizontale Brennweite (Fokuslänge)
+- $\phi_y$ - vertikale Brennweite (Fokuslänge)
+- $\gamma$ - Scherung zwischen x- und y-Achse
+- $\delta_x$ - x-Koordinate des Bildzentrums
+- $\delta_y$ - y-Koordinate des Bildzentrums
+- => es gibt zwei Fokuslängen, weil die physikalische Größe der Pixel in x- und y-Richtung nicht gleich sein muss.
+
+**Extrinsische Parameter**
+$$
+\begin{bmatrix}
+\omega_{11} & \omega_{12} & \omega_{13} & \tau_{x} \\
+\omega_{21} & \omega_{22} & \omega_{23} & \tau_{y} \\
+\omega_{31} & \omega_{32} & \omega_{33} & \tau_{z} \\
+\end{bmatrix}
+$$
+
+- $\omega$ - 3x3 Rotationsmatrix - Orientierung der Kamera im Raum
+- $\tau$ - 3x1 Translationsmatrix - Position der Kamera
+
+**Verzerrungskorrektur**
+$$
+x′=x⋅(1+\beta_1​r^2+\beta_2​r^4) \\
+y′=y⋅(1+\beta_1​r^2+\beta_2​r^4)
+$$
+
+- $x,y$ - ursprüngliche Koordinaten
+- $x',y'$ - verzerrte Koordinaten
+- $r$ - Radius
+- $\beta$ - radiale Verzerrungskoeffizienten
+
+---
+**1.7 Welche grundlegenden 3 geometrischen Probleme können mittels Kamera Kalibrierung gelöst werden? Erläutern Sie ev. mit Skizze.**
+
+- Bestimmung der extrinsischen Parameter
+- Bestimmung der intrinsische Parameter
+
+<img src="./img/linear_parameter.png" width="600" />
+
+- 3D-Rekonstruktion aus mehreren Ansichten
+
+<img src="./img/linear_3d_reconstruction.png" width="600" />
+
+---
+**1.8 Beschreiben Sie den Verfahrensablauf bei der Kalibrierung einer Kamera (Schachbrett-Muster).**
+- Ziel: Bestimmung der intrinsischen und extrinsischen Kameraparameter durch Beobachtung eines bekannten 2D- oder 3D-Kalibriermusters, z.B. eines Schachbretts
+1. Kalibriermuster aufnehmen
+    - Schachbrettmuster mit 7×6 Gitterpunkte
+    - Muster muss aus mehreren Blickwinkeln aufgenommen werden
+2. Referenzpunkte definieren
+    - Weil Muster 2D ist -> z = 0
+    - Die Punkte werden definiert: (0,0),(1,0),... oder in echten Einheiten: (0,0),(0,50),...
+3. Bildpunkte extrahieren
+    - Detektion der zugehörigen Bildpunkte​ im aufgenommenen Bild
+    - z.B. über automatische Checkerboard-Erkennung
+4. Gleichungssystem aufstellen
+    - Jedes Punktpaar liefert zwei Gleichungen
+    - Es gibt insgesamt 12 Unbekannte (Parameter in der Projektionsmatrix)
+    - Mindestens 6 Punktpaare sind nötig – mehr Punkte verbessern die Genauigkeit (→ Overdetermined system)
+5. Optimierung der Parameter
+    - Intrinsische und extrinsische Parameter werden geschätzt & optimiert
+6. Verzerrungskorrektur anwenden
+    - Bild kann nun entzerrt werden
+
+---
+**1.9 Erläutern sie grob, wie die Gleichungen zur Kalibrierung einer Kamera definiert und gelöst werden können. Ev. mit Skizze.**
+
+$$
+\lambda
+\begin{bmatrix}
+x \\
+y \\
+1
+\end{bmatrix}
+=
+\begin{bmatrix}
+\phi_x & \gamma & \delta_x & 0 \\
+0 & \phi_y & \delta_y & 0 \\
+0 & 0 & 1 & 0 \\
+0 & 0 & 0 & 1
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+\omega_{11} & \omega_{12} & \omega_{13} & \tau_{x} \\
+\omega_{21} & \omega_{22} & \omega_{23} & \tau_{y} \\
+\omega_{31} & \omega_{32} & \omega_{33} & \tau_{z} \\
+0 & 0 & 0 & 1
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+u \\
+v \\
+w \\
+1
+\end{bmatrix}
+$$
+
+- $\lambda$ - Skalierungsfaktor
+- $\begin{bmatrix}
+    x \\
+    y \\
+    1
+   \end{bmatrix}$ - Bildkoordinaten
+- $\begin{bmatrix}
+    \phi_x & \gamma & \delta_x & 0 \\
+    0 & \phi_y & \delta_y & 0 \\
+    0 & 0 & 1 & 0 \\
+    0 & 0 & 0 & 1
+   \end{bmatrix}$ - intrinsisch
+- $\begin{bmatrix}
+    \omega_{11} & \omega_{12} & \omega_{13} & \tau_{x} \\
+    \omega_{21} & \omega_{22} & \omega_{23} & \tau_{y} \\
+    \omega_{31} & \omega_{32} & \omega_{33} & \tau_{z} \\
+    0 & 0 & 0 & 1
+   \end{bmatrix}$ - extrinsisch
+- $\begin{bmatrix}
+    u \\
+    v \\
+    w \\
+    1
+  \end{bmatrix}$ - Weltkoordinaten
+
+**Wie kann die Gleichung gelöst werden?**
+- Annahme: Die intrinsischen Parameter müssen nicht berechnet werden, siehe Skizze:
+
+<img src="./img/linear_calibration.png" width="400" />
+
+1. Für jeden Punkt im Bild werden zwei Gleichungen definiert (eine für x, eine für y)
+2. Dabei haben wir 12 unbekannte Parameter (extrinsisch) => zum Lösen kann das SVD (Singular Value Decomposition) angewendet werden  
 
 ---
 ## 2. Segmentation and Classification [8]
