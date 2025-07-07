@@ -266,7 +266,7 @@ $$
 ---
 **1.9 Erläutern sie grob, wie die Gleichungen zur Kalibrierung einer Kamera definiert und gelöst werden können. Ev. mit Skizze.**
 
-$$
+```math
 \lambda
 \begin{bmatrix}
 x \\
@@ -294,7 +294,7 @@ v \\
 w \\
 1
 \end{bmatrix}
-$$
+```
 
 - $\lambda$ - Skalierungsfaktor
 - $\begin{bmatrix}
