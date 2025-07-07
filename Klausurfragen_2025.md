@@ -133,6 +133,8 @@ Nein, im Allgemeinen sind sie nicht kommutativ:
 
 <img src="./img/linear_commutative.png" width="600" />
 
+<img src="./img/3.png" width="600" />
+
 ---
 **1.3 Intrinsische vs. Extrinsische Rotation, d.h. Objekt- bzw. Koordinatensystem-bezogen. Vgl. Vor und Nachteile. Welche Eigenheit gibt es bei der Überführung von extrinsisch nach intrinsisch (Rot-Reihenfolge dreht sich um)**
 
